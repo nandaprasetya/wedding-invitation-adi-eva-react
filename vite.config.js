@@ -40,5 +40,5 @@ const cloudflareSpaPlugin = () => ({
 
 export default defineConfig({
   plugins: [react(), cloudflareSpaPlugin()],
-  base: './',
+  base: '/',
 })
