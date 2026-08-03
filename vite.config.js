@@ -3,49 +3,30 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 
-// Custom Vite plugin to serve & copy assets from wedding-invitation-test
-const copyAssetsPlugin = () => ({
-  name: 'serve-test-assets',
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
-      const cleanUrl = req.url.split('?')[0];
-      if (cleanUrl.includes('/assets/')) {
-        const assetsSubPath = cleanUrl.substring(cleanUrl.indexOf('/assets/'));
-        const filePath = path.join(__dirname, '../wedding-invitation-test', assetsSubPath);
-        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-          const ext = path.extname(filePath).toLowerCase();
-          const contentTypes = {
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.mp3': 'audio/mpeg',
-            '.svg': 'image/svg+xml'
-          };
-          res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
-          return fs.createReadStream(filePath).pipe(res);
-        }
-      }
-      next();
-    });
-  },
-  closeBundle() {
-    const src = path.join(__dirname, '../wedding-invitation-test/assets');
-    const dest = path.join(__dirname, 'dist/assets');
-    function copyRecursive(from, to) {
-      if (!fs.existsSync(to)) fs.mkdirSync(to, { recursive: true });
-      fs.readdirSync(from).forEach(file => {
-        const s = path.join(from, file);
-        const d = path.join(to, file);
-        if (fs.statSync(s).isDirectory()) copyRecursive(s, d);
-        else fs.copyFileSync(s, d);
-      });
+// Copy assets from ../wedding-invitation-test/assets to public/assets if present locally
+const srcAssets = path.join(__dirname, '../wedding-invitation-test/assets')
+const destAssets = path.join(__dirname, 'public/assets')
+
+function copyRecursiveSync(src, dest) {
+  if (!fs.existsSync(src)) return
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
+  fs.readdirSync(src).forEach(file => {
+    const srcPath = path.join(src, file)
+    const destPath = path.join(dest, file)
+    if (fs.statSync(srcPath).isDirectory()) {
+      copyRecursiveSync(srcPath, destPath)
+    } else {
+      fs.copyFileSync(srcPath, destPath)
     }
-    if (fs.existsSync(src)) {
-      copyRecursive(src, dest);
-    }
-  }
-})
+  })
+}
+
+try {
+  copyRecursiveSync(srcAssets, destAssets)
+} catch (e) {
+  console.warn('Could not copy external test assets:', e.message)
+}
 
 export default defineConfig({
-  plugins: [react(), copyAssetsPlugin()],
+  plugins: [react()],
 })
