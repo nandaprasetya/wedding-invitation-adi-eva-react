@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D77F"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#AA7C11"/>
+    </linearGradient>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2A2A2A"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)" stroke="url(#goldGrad)" stroke-width="12"/>
+  
+  <!-- Outer Gold Ring -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-dasharray="12 8" opacity="0.6"/>
+
+  <!-- Camera / Frame Icon Silhouette -->
+  <path d="M 160 180 L 195 140 L 317 140 L 352 180 L 400 180 C 413.2 180 424 190.8 424 204 L 424 356 C 424 369.2 413.2 380 400 380 L 112 380 C 98.8 380 88 369.2 88 356 L 88 204 C 88 190.8 98.8 180 112 180 Z" fill="none" stroke="url(#goldGrad)" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- Lens Circle -->
+  <circle cx="256" cy="280" r="65" fill="none" stroke="url(#goldGrad)" stroke-width="12"/>
+  <circle cx="256" cy="280" r="35" fill="url(#goldGrad)"/>
+
+  <!-- Ansel Monogram "A" inside lens -->
+  <text x="256" y="293" font-family="'Cormorant Garamond', 'Georgia', serif" font-size="38" font-weight="bold" fill="#111111" text-anchor="middle">A</text>
+  
+  <!-- Flash Dot -->
+  <circle cx="370" cy="220" r="10" fill="url(#goldGrad)"/>
+</svg>
