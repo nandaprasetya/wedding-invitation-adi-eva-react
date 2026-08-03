@@ -1,0 +1,147 @@
+.custom-name-container {
+  max-width: 768px;
+  margin: 40px auto;
+  padding: 0 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.custom-name-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.custom-name-card-header {
+  padding: 16px 20px;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #2d3748;
+  border-bottom: 1px solid #edf2f7;
+  background-color: #ffffff;
+}
+
+.custom-name-card-body {
+  padding: 20px;
+}
+
+.input-group {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.input-group-text {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  padding: 10px 16px;
+  color: #495057;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.input-group-input {
+  flex: 1;
+  border: 1px solid #ced4da;
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group-input:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: #5cb85c;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #4cae4c;
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #212529;
+  border: 1px solid #ccc;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e6ea;
+}
+
+.btn-danger {
+  background-color: #d9534f;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c9302c;
+}
+
+.detail-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.invitation-textarea {
+  width: 100%;
+  min-height: 240px;
+  padding: 14px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #212529;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background-color: #ffffff;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.detail-actions-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.copy-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #28a745;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
