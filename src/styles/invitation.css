@@ -1,0 +1,1423 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cormorant Garamond', serif;
+    background-color: #000;
+    color: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.outer-page {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    align-items: flex-start;
+}
+
+.left-page {
+    position: sticky;
+    top: 0;
+    width: 70%;
+    height: 100vh;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 0;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.left-page-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg, 
+        rgba(0, 0, 0, 0.15) 0%, 
+        rgba(0, 0, 0, 0.5) 60%, 
+        rgba(0, 0, 0, 0.8) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
+.left-page-content {
+    position: relative;
+    z-index: 2;
+    padding: 4rem 3.5rem;
+    text-align: left;
+    max-width: 540px;
+    color: #FFFFFF;
+}
+
+.left-subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 0.6rem;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.left-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 1.2rem;
+    line-height: 1.1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.left-desc {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.98rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.right-page {
+    position: relative;
+    width: 30%;
+    height: auto;
+    min-height: 100vh;
+    background-color: #000;
+    z-index: 20;
+}
+
+.section-cover {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Background Carousel */
+.carousel-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.8s ease-in-out;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+/* Gradient Overlay for Text Readability */
+.carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg, 
+        rgba(0, 0, 0, 0.4) 0%, 
+        rgba(0, 0, 0, 0.15) 40%, 
+        rgba(0, 0, 0, 0.2) 60%, 
+        rgba(0, 0, 0, 0.5) 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Content Overlay */
+.content-overlay {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: 4.5rem 1.5rem 4rem 1.5rem;
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+.header-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    opacity: 0.95;
+}
+
+.title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.02em;
+}
+
+.date {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    opacity: 0.95;
+}
+
+.guest-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.dear {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+}
+
+.guest-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.1rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* Quote & Om Swastyastu Section */
+.section-quote {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    background-color: #EAE6DF;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5rem 2.2rem 3rem 2.2rem;
+    text-align: center;
+}
+
+.quote-container {
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.quote-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.7;
+    color: #3B3833;
+    margin-bottom: 2.2rem;
+}
+
+.quote-source {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-style: italic;
+    color: #1A1A1A;
+    margin-bottom: 4rem;
+}
+
+.greeting-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.1rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: #45423D;
+    margin-bottom: 2.5rem;
+    text-transform: uppercase;
+}
+
+.greeting-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    line-height: 1.75;
+    color: #3B3833;
+}
+
+/* Couple Section (Mempelai Pria & Mempelai Wanita) */
+.section-couple {
+    position: relative;
+    width: 100%;
+    background-color: #EAE6DF;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    gap: 0;
+}
+
+.couple-card {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    height: 100svh;
+    background-size: cover;
+    background-position: center;
+    border-radius: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.couple-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.5) 45%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.couple-info {
+    position: relative;
+    z-index: 2;
+    padding: 2rem 1.6rem 2.2rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.groom-info {
+    text-align: left;
+    align-items: flex-start;
+}
+
+.bride-info {
+    text-align: right;
+    align-items: flex-end;
+}
+
+.couple-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.couple-relation {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 0.35rem;
+    line-height: 1.4;
+}
+
+.couple-parents {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 1.1rem;
+    line-height: 1.45;
+}
+
+.couple-address {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.4;
+}
+
+/* Pawiwahan Section */
+.section-pawiwahan {
+    position: relative;
+    width: 100%;
+    background-color: #EAE6DF;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 2.2rem 2rem 2.2rem;
+    text-align: center;
+}
+
+.pawiwahan-container {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pawiwahan-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: 2.9rem;
+    color: #4A3B32;
+    margin-bottom: 2rem;
+    line-height: 1.2;
+}
+
+.pawiwahan-names {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #1A1A1A;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 2.2rem;
+}
+
+.pawiwahan-photo-frame {
+    width: 100%;
+    max-width: 320px;
+    height: 440px;
+    border-radius: 180px 180px 0 0;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 2.8rem;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12), 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+.pawiwahan-invitation {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: #3A3A3A;
+    max-width: 480px;
+    padding: 0 0.5rem;
+}
+
+/* Event Section (Acara Kami) */
+.section-event {
+    position: relative;
+    width: 100%;
+    background-color: #EAE6DF;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0rem 2.2rem 6rem 2.2rem;
+    text-align: center;
+}
+
+.event-container {
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.event-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: #45423D;
+    margin-bottom: 2.8rem;
+    text-transform: uppercase;
+}
+
+/* Event Grid */
+.event-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    width: 100%;
+    border: 1px solid #7E7972;
+    margin-bottom: 3.5rem;
+    background-color: #EAE6DF;
+}
+
+.grid-cell {
+    border: 1px solid #7E7972;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.cell-day {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+}
+
+.cell-time {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.cell-time .label {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 0.2rem;
+}
+
+.cell-time .val {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111;
+}
+
+.cell-date {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.cell-date .date-num {
+    font-size: 3.8rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #111;
+    margin-bottom: 0.4rem;
+}
+
+.cell-date .month-year {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #111;
+}
+
+.cell-location {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.cell-location .loc-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 0.4rem;
+}
+
+.cell-location .loc-desc {
+    font-size: 0.98rem;
+    color: #333;
+    line-height: 1.45;
+}
+
+/* Countdown */
+.countdown-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 3.5rem;
+}
+
+.cd-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cd-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.2rem;
+    font-weight: 400;
+    color: #222;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.cd-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 400;
+}
+
+/* Google Maps Button & Dividers */
+.maps-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.maps-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #7E7972;
+}
+
+.maps-button {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: #333;
+    text-decoration: none;
+    padding: 0.4rem 1rem;
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+.maps-button:hover {
+    color: #000;
+    font-weight: 700;
+    transform: translateY(-1px);
+}
+
+/* Gallery Section (Our Capture Moment) */
+.section-gallery {
+    position: relative;
+    width: 100%;
+    background-color: #EAE6DF;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 1.8rem 6rem 1.8rem;
+    text-align: center;
+}
+
+.gallery-container {
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gallery-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: 3.1rem;
+    color: #4A3B32;
+    margin-bottom: 2.5rem;
+    line-height: 1.1;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    width: 100%;
+}
+
+.gallery-item {
+    display: block;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.gallery-item:hover {
+    transform: scale(1.025);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 270px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Guestbook Section (Buku Tamu) */
+.section-guestbook {
+    position: relative;
+    width: 100%;
+    background-color: #EAE6DF;
+    color: #333333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 1.8rem 6rem 1.8rem;
+    text-align: center;
+}
+
+.guestbook-container {
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.guestbook-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: 3.1rem;
+    color: #4A3B32;
+    margin-bottom: 0.4rem;
+    line-height: 1.1;
+}
+
+.guestbook-subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.02rem;
+    font-weight: 500;
+    color: #3A3A3A;
+    margin-bottom: 2.5rem;
+}
+
+.guestbook-card {
+    background-color: #FAF8F5;
+    border: 1px solid #D8D2C9;
+    border-radius: 10px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    text-align: left;
+}
+
+.gb-card-header {
+    background-color: #FAF8F5;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #EAE4DC;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.08rem;
+    color: #5A4839;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gb-form {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-bottom: 1px solid #EAE4DC;
+}
+
+.gb-input,
+.gb-select,
+.gb-textarea {
+    width: 100%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid #D2CAC0;
+    border-radius: 6px;
+    background-color: #FFFFFF;
+    color: #333333;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gb-input:focus,
+.gb-select:focus,
+.gb-textarea:focus {
+    border-color: #6B5B3E;
+    box-shadow: 0 0 0 3px rgba(107, 91, 62, 0.12);
+}
+
+.gb-textarea-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.gb-textarea {
+    resize: vertical;
+    min-height: 95px;
+}
+
+.gb-char-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.82rem;
+    color: #888888;
+    pointer-events: none;
+}
+
+.gb-btn-send {
+    align-self: flex-start;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    background-color: #6B5B3E;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.6rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.gb-btn-send:hover {
+    background-color: #554830;
+}
+
+.gb-btn-send:active {
+    transform: scale(0.98);
+}
+
+/* Wishes List */
+.wishes-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.wish-item {
+    padding: 1.4rem 1.5rem;
+    border-bottom: 1px solid #EAE4DC;
+    background-color: #FAF8F5;
+}
+
+.wish-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.wish-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #222222;
+}
+
+.wish-badge {
+    background-color: #6B5B3E;
+    color: #FFFFFF;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.check-icon {
+    font-style: normal;
+    font-size: 0.82rem;
+}
+
+.wish-time {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    color: #888888;
+    margin-bottom: 0.6rem;
+}
+
+.wish-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: #444444;
+}
+
+/* Pagination */
+.gb-pagination {
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    color: #555555;
+    flex-wrap: wrap;
+}
+
+.page-nav {
+    color: #666666;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.page-nav.disabled {
+    color: #AAAAAA;
+    cursor: default;
+}
+
+.page-num {
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+}
+
+.page-num.active {
+    font-weight: 700;
+    color: #111111;
+    border-bottom: 2px solid #111111;
+}
+
+.page-dots {
+    color: #888888;
+}
+
+/* Wedding Gift Section */
+.section-gift {
+    position: relative;
+    width: 100%;
+    background-color: #121212;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4.5rem 1.8rem 6rem 1.8rem;
+    text-align: center;
+}
+
+.gift-container {
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gift-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    margin-bottom: 1.8rem;
+    line-height: 1.1;
+}
+
+.gift-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #E2E2E2;
+    margin-bottom: 2.5rem;
+    max-width: 440px;
+}
+
+/* Toggle Button */
+.btn-toggle-gift {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: #4A3B32;
+    background-color: #ECE8E1;
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+    margin-bottom: 2.8rem;
+}
+
+.btn-toggle-gift:hover {
+    background-color: #FAF8F5;
+    transform: translateY(-1px);
+}
+
+.btn-toggle-gift:active {
+    transform: translateY(0);
+}
+
+.eye-icon {
+    stroke: #4A3B32;
+}
+
+/* Gift Cards Container */
+.gift-cards-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.8rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.gift-card {
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    color: #222222;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+    position: relative;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.bank-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #222222;
+    margin-bottom: 0.6rem;
+}
+
+.acc-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.92rem;
+    color: #777777;
+    margin-bottom: 0.3rem;
+}
+
+.acc-number {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #111111;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+}
+
+.acc-holder {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    color: #555555;
+    margin-bottom: 1.2rem;
+}
+
+.card-divider {
+    width: 60%;
+    height: 1px;
+    background-color: #D6C2A5;
+}
+
+.btn-copy {
+    background-color: #5C4A3E;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+    margin-bottom: 1rem;
+}
+
+.btn-copy:hover {
+    background-color: #45372E;
+    transform: scale(1.05);
+}
+
+.btn-copy svg {
+    stroke: #FFFFFF;
+}
+
+.copy-tooltip {
+    position: absolute;
+    top: -35px;
+    right: 50%;
+    transform: translateX(50%);
+    background-color: #222222;
+    color: #FFFFFF;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-copy.copied .copy-tooltip {
+    opacity: 1;
+    transform: translateX(50%) translateY(-3px);
+}
+
+/* Footer Section (Matur Suksma) */
+.section-footer {
+    position: relative;
+    width: 100%;
+    min-height: 90vh;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #FFFFFF;
+    padding: 5rem 2rem;
+    overflow: hidden;
+}
+
+.footer-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg, 
+        rgba(0, 0, 0, 0.45) 0%, 
+        rgba(0, 0, 0, 0.65) 50%, 
+        rgba(0, 0, 0, 0.85) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
+.footer-content {
+    position: relative;
+    z-index: 2;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.footer-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 1.6rem;
+    line-height: 1.1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.footer-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    line-height: 1.65;
+    color: #F0F0F0;
+    margin-bottom: 4rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.footer-branding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.creator-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+.social-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.social-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    opacity: 0.88;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.social-item:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.social-item svg {
+    stroke: #FFFFFF;
+}
+
+/* Opening Cover Screen Overlay */
+.opening-screen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #FFFFFF;
+    transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.opening-screen.slide-up {
+    transform: translateY(-100%);
+    pointer-events: none;
+}
+
+.opening-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg, 
+        rgba(0, 0, 0, 0.45) 0%, 
+        rgba(0, 0, 0, 0.65) 50%, 
+        rgba(0, 0, 0, 0.85) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
+.opening-content {
+    position: relative;
+    z-index: 2;
+    max-width: 480px;
+    width: 90%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+}
+
+.opening-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    color: #F0F0F0;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.opening-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.2rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #FFFFFF;
+    margin-bottom: 3.5rem;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+    line-height: 1.1;
+}
+
+.opening-guest-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.opening-guest-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-style: italic;
+    color: #E2E2E2;
+    margin-bottom: 0.5rem;
+}
+
+.opening-guest-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.opening-apology {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #D2D2D2;
+    max-width: 320px;
+    line-height: 1.4;
+}
+
+.btn-open-invitation {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #3D322A;
+    background-color: #ECE8E1;
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.btn-open-invitation:hover {
+    background-color: #FAF8F5;
+    transform: translateY(-2px);
+}
+
+.btn-open-invitation:active {
+    transform: translateY(0);
+}
+
+/* Floating Music Control Button */
+.btn-music-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background-color: #5C4A3E;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
+}
+
+.btn-music-toggle:hover {
+    background-color: #4A3B32;
+    transform: scale(1.08);
+}
+
+.btn-music-toggle.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.music-icon {
+    width: 18px;
+    height: 18px;
+    fill: #FFFFFF;
+}
+
+.music-icon.hidden {
+    display: none;
+}
+
+.btn-music-toggle.spinning {
+    animation: rotateMusic 4s linear infinite;
+}
+
+@keyframes rotateMusic {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+/* Tablet Layout (501px to 1024px): Split 50:50 Left & Right */
+@media (max-width: 1024px) and (min-width: 501px) {
+    .outer-page {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+        align-items: flex-start;
+    }
+    .left-page {
+        display: flex;
+        width: 50%;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+    .left-page-content {
+        padding: 3rem 2rem;
+    }
+    .left-title {
+        font-size: 2.8rem;
+    }
+    .right-page {
+        display: block;
+        width: 50%;
+        min-height: 100vh;
+        height: auto;
+    }
+}
+
+/* Mobile Layout (<= 500px): Display Right Panel Only */
+@media (max-width: 500px) {
+    .outer-page {
+        display: block;
+        width: 100%;
+        min-height: 100vh;
+    }
+    .left-page {
+        display: none !important;
+    }
+    .right-page {
+        display: block;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        min-height: 100vh;
+        height: auto;
+    }
+    .title {
+        font-size: 2.5rem;
+    }
+    .section-quote {
+        padding: 4rem 1.5rem;
+    }
+    .quote-text, .greeting-text {
+        font-size: 1.15rem;
+    }
+    .greeting-title {
+        font-size: 1.8rem;
+    }
+}
