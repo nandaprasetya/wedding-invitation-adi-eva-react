@@ -27,7 +27,18 @@ try {
   console.warn('Could not copy external test assets:', e.message)
 }
 
+const cloudflareSpaPlugin = () => ({
+  name: 'cloudflare-spa-fallback',
+  closeBundle() {
+    const indexHtml = path.join(__dirname, 'dist/index.html')
+    const fourOhFourHtml = path.join(__dirname, 'dist/404.html')
+    if (fs.existsSync(indexHtml)) {
+      fs.copyFileSync(indexHtml, fourOhFourHtml)
+    }
+  }
+})
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cloudflareSpaPlugin()],
   base: './',
 })
