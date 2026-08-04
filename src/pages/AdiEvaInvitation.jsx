@@ -374,8 +374,9 @@ export default function AdiEvaInvitation() {
               <h2 className="pawiwahan-title">Pawiwahan</h2>
 
               <div className="pawiwahan-names">
-                <p>I Gede Adi Wijaya</p>
-                <p>Putu Eva Cahyani</p>
+                <p className="pawiwahan-name">I Gede Adi Wijaya</p>
+                <p className="pawiwahan-amp">&amp;</p>
+                <p className="pawiwahan-name">Putu Eva Cahyani</p>
               </div>
 
               <div className="pawiwahan-photo-frame" style={{ backgroundImage: "url('/assets/img/GIK-2.jpg')" }}></div>

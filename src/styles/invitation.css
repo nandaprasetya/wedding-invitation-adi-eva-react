@@ -397,14 +397,28 @@ body {
 }
 
 .pawiwahan-names {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    font-size: 1.15rem;
+    font-family: 'Cormorant Garamond', serif;
     color: #1A1A1A;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    align-items: center;
+    gap: 0.3rem;
     margin-bottom: 2.2rem;
+}
+
+.pawiwahan-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.pawiwahan-amp {
+    font-family: 'Alex Brush', 'Cormorant Garamond', serif;
+    font-size: 2.8rem;
+    font-weight: 400;
+    line-height: 1;
+    margin: 0.2rem 0;
 }
 
 .pawiwahan-photo-frame {
