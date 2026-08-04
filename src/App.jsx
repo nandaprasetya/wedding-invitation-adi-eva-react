@@ -14,6 +14,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<AdiEvaInvitation />} />
         <Route path="/adi-eva" element={<AdiEvaInvitation />} />
+        <Route path="/adi-eva/custom-name" element={<CustomName />} />
         <Route path="/custom-name" element={<CustomName />} />
         <Route path="*" element={<FallbackRedirect />} />
       </Routes>
