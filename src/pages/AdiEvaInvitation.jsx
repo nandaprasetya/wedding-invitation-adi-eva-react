@@ -57,6 +57,11 @@ export default function AdiEvaInvitation() {
   // Cover Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // Video State (Loaded on Demand & Fullscreen Modal)
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const videoRef = useRef(null);
+
   // Countdown State
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -164,6 +169,41 @@ export default function AdiEvaInvitation() {
       }).catch((err) => console.log('Audio error:', err));
     }
   };
+
+  // Handle Play Video (Pause Music & Open Fullscreen Video Modal)
+  const handlePlayVideo = () => {
+    setIsVideoLoaded(true);
+    setIsVideoModalOpen(true);
+    if (audioRef.current && isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    }
+  };
+
+  const handleCloseVideoModal = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsVideoModalOpen(false);
+  };
+
+  const handleVideoPlay = () => {
+    if (audioRef.current && isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isVideoModalOpen && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+      if (videoRef.current.requestFullscreen) {
+        videoRef.current.requestFullscreen().catch(() => {});
+      } else if (videoRef.current.webkitRequestFullscreen) {
+        videoRef.current.webkitRequestFullscreen().catch(() => {});
+      }
+    }
+  }, [isVideoModalOpen]);
 
   // Guestbook Form Submit Handler
   const handleGuestbookSubmit = async (e) => {
@@ -451,6 +491,27 @@ export default function AdiEvaInvitation() {
             <div className="gallery-container">
               <h2 className="gallery-title">Our Capture Moment</h2>
 
+              {/* Video Player Poster (Loaded on Demand & Opens Fullscreen) */}
+              <div className="gallery-video-wrapper">
+                <div
+                  className="gallery-video-poster"
+                  onClick={handlePlayVideo}
+                >
+                  <img
+                    src="/assets/img/GIK-13.jpg"
+                    alt="Wedding Video Thumbnail"
+                    className="video-poster-img"
+                  />
+                  <div className="video-poster-overlay">
+                    <button className="video-play-btn" aria-label="Play Video">
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="gallery-grid">
                 {galleryImages.map((imgSrc, index) => (
                   <a
@@ -701,6 +762,26 @@ export default function AdiEvaInvitation() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Video Modal */}
+      {isVideoModalOpen && (
+        <div className="video-modal-overlay" onClick={handleCloseVideoModal}>
+          <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
+            <button className="video-modal-close" onClick={handleCloseVideoModal} aria-label="Close Video">
+              ✕
+            </button>
+            <video
+              ref={videoRef}
+              className="video-modal-element"
+              src="/assets/img/wedding-video.mp4"
+              controls
+              autoPlay
+              playsInline
+              onPlay={handleVideoPlay}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
