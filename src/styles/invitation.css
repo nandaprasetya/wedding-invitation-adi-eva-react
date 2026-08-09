@@ -782,6 +782,11 @@ body {
     background-color: #000;
 }
 
+.video-modal-iframe {
+    aspect-ratio: 16 / 9;
+    border: 0;
+}
+
 .gallery-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

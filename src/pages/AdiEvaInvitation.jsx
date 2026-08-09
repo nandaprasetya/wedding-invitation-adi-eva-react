@@ -60,7 +60,6 @@ export default function AdiEvaInvitation() {
   // Video State (Loaded on Demand & Fullscreen Modal)
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const videoRef = useRef(null);
 
   // Countdown State
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -181,29 +180,8 @@ export default function AdiEvaInvitation() {
   };
 
   const handleCloseVideoModal = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
     setIsVideoModalOpen(false);
   };
-
-  const handleVideoPlay = () => {
-    if (audioRef.current && isMusicPlaying) {
-      audioRef.current.pause();
-      setIsMusicPlaying(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isVideoModalOpen && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-      if (videoRef.current.requestFullscreen) {
-        videoRef.current.requestFullscreen().catch(() => {});
-      } else if (videoRef.current.webkitRequestFullscreen) {
-        videoRef.current.webkitRequestFullscreen().catch(() => {});
-      }
-    }
-  }, [isVideoModalOpen]);
 
   // Guestbook Form Submit Handler
   const handleGuestbookSubmit = async (e) => {
@@ -498,7 +476,8 @@ export default function AdiEvaInvitation() {
                   onClick={handlePlayVideo}
                 >
                   <img
-                    src="/assets/img/GIK-13.jpg"
+                    src="https://img.youtube.com/vi/SokqIN0Fj0c/maxresdefault.jpg"
+                    onError={(e) => { e.target.src = '/assets/img/GIK-13.jpg'; }}
                     alt="Wedding Video Thumbnail"
                     className="video-poster-img"
                   />
@@ -770,14 +749,12 @@ export default function AdiEvaInvitation() {
             <button className="video-modal-close" onClick={handleCloseVideoModal} aria-label="Close Video">
               ✕
             </button>
-            <video
-              ref={videoRef}
-              className="video-modal-element"
-              src="/assets/img/wedding-video.mp4"
-              controls
-              autoPlay
-              playsInline
-              onPlay={handleVideoPlay}
+            <iframe
+              className="video-modal-element video-modal-iframe"
+              src="https://www.youtube.com/embed/SokqIN0Fj0c?autoplay=1&rel=0"
+              title="Wedding Video - Adi & Eva"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
             />
           </div>
         </div>
