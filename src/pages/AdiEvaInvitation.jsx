@@ -11,7 +11,6 @@ const galleryImages = [
   '/assets/img/GIK-2.jpg',
   '/assets/img/GIK-3.jpg',
   '/assets/img/GIK-4.png',
-  '/assets/img/GIK-10.jpg',
   '/assets/img/GIK-13.jpg',
   '/assets/img/GIK-13(1).jpg',
   '/assets/img/GIK-14.png',
@@ -22,10 +21,8 @@ const galleryImages = [
   '/assets/img/GIK-44.jpg',
   '/assets/img/GIK-46.jpg',
   '/assets/img/GIK-51.png',
-  '/assets/img/GIK.jpg',
   '/assets/img/Pepotrek-4.jpg',
   '/assets/img/Pepotrek-7.jpg',
-  '/assets/img/Pepotrek-13.jpg',
   '/assets/img/Pepotrek-17.jpg',
   '/assets/img/Pepotrek-18.jpg',
   '/assets/img/Pepotrek-19.jpg',
@@ -34,7 +31,11 @@ const galleryImages = [
   '/assets/img/Pepotrek-26.jpg',
   '/assets/img/Pepotrek-28.jpg',
   '/assets/img/Pepotrek-29.jpg',
-  '/assets/img/Pepotrek-31.jpg',
+  '/assets/img/fix-GIK-1.jpg',
+  '/assets/img/fix-GIK-3.jpg',
+  '/assets/img/fix-GIK-5.jpg',
+  '/assets/img/fix-GIK-12.jpg',
+  '/assets/img/fix-GIK-13.jpg',
 ];
 
 const coverSlides = [
@@ -116,7 +117,11 @@ export default function AdiEvaInvitation() {
       selector: '.glightbox',
       touchNavigation: true,
       loop: true,
-      zoomable: true
+      zoomable: true,
+      width: '100vw',
+      height: '100vh',
+      openEffect: 'zoom',
+      closeEffect: 'zoom'
     });
     return () => {
       lightbox.destroy();
@@ -280,7 +285,7 @@ export default function AdiEvaInvitation() {
       )}
 
       {/* Audio Element & Floating Music Control */}
-      <audio ref={audioRef} loop src="/assets/music/backsound.mp3" preload="auto" />
+      <audio ref={audioRef} loop src="/assets/music/backsound-fix.mp3" preload="auto" />
 
       <button
         className={`btn-music-toggle ${!isOpened ? 'hidden' : ''} ${isMusicPlaying ? 'spinning' : ''}`}

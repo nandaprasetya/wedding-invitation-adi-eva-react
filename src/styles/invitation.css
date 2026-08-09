@@ -1574,3 +1574,46 @@ body {
         font-size: 1.8rem;
     }
 }
+
+/* GLightbox Fullscreen & Consistency Overrides */
+.glightbox-container .ginner-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.glightbox-container .gslide-media {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.glightbox-container .gslide-image {
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+.glightbox-container .gslide-image img {
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+}
+
+
