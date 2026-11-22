@@ -14,14 +14,14 @@ service cloud.firestore {
 
       // Validasi dasar saat pelanggan membuat pesanan baru
       allow create: if request.resource.data.orderCode == orderCode
-        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.status == 'pending_confirmation'
         && request.resource.data.schemaVersion == 1
         && request.resource.data.contact.customerName is string
         && request.resource.data.contact.customerName.size() >= 2
         && request.resource.data.contact.whatsapp is string
         && request.resource.data.contact.whatsapp.size() >= 10
         && request.resource.data.pricing.totalPrice is number
-        && request.resource.data.pricing.totalPrice >= 0
+        && request.resource.data.pricing.totalPrice == 0
         && request.resource.data.requestedSlug is string
         && request.resource.data.requestedSlug.size() >= 2;
     }

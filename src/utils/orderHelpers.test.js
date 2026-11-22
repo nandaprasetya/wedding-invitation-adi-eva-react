@@ -39,26 +39,27 @@ test('normalizeWhatsapp converts Indonesian local/international numbers and reje
 });
 
 test('formatRupiah and formatDateIndo format display values cleanly', () => {
+  assert.equal(formatRupiah(0), 'Free');
   assert.equal(formatRupiah(299000), 'Rp299.000');
   assert.equal(formatDateIndo('2026-08-19T15:00'), 'Rabu, 19 Agustus 2026');
   assert.equal(formatDateIndo('invalid'), '');
 });
 
-test('calculateOrderPricing sums package base price and paid add-ons', () => {
+test('calculateOrderPricing returns zero (Free) for all packages and add-ons', () => {
   const baseOnly = calculateOrderPricing('premium', { splitLink: false });
   assert.deepEqual(baseOnly, {
     currency: 'IDR',
-    basePrice: 299000,
+    basePrice: 0,
     addonsTotal: 0,
-    totalPrice: 299000,
+    totalPrice: 0,
   });
 
   const withSplit = calculateOrderPricing('standard', { splitLink: true });
   assert.deepEqual(withSplit, {
     currency: 'IDR',
-    basePrice: 199000,
-    addonsTotal: 49000,
-    totalPrice: 248000,
+    basePrice: 0,
+    addonsTotal: 0,
+    totalPrice: 0,
   });
 });
 
@@ -143,21 +144,22 @@ test('buildOrderPayload strips inactive conditional arrays and normalizes fields
 
   const payload = buildOrderPayload(form, 'ANSL-7K9M2X');
   assert.equal(payload.orderCode, 'ANSL-7K9M2X');
-  assert.equal(payload.status, 'pending_payment');
+  assert.equal(payload.status, 'pending_confirmation');
   assert.equal(payload.requestedSlug, 'adi-eva');
   assert.equal(payload.contact.whatsapp, '6281234567890');
   assert.equal(payload.contact.customerName, 'Nanda Putra');
   assert.deepEqual(payload.invitationData.mepandes, []);
   assert.deepEqual(payload.invitationData.loveStories, []);
   assert.equal(payload.invitationData.groom.instagram, 'adi');
-  assert.equal(payload.pricing.totalPrice, 348000);
+  assert.equal(payload.pricing.totalPrice, 0);
 
   const waUrl = buildAdminWhatsappUrl(payload, 'https://anselmoments.com');
   assert.ok(waUrl.startsWith('https://wa.me/6285700848786?text='));
   const decoded = decodeURIComponent(waUrl.split('text=')[1]);
   assert.match(decoded, /ANSL-7K9M2X/);
   assert.match(decoded, /Nama Pemesan: Nanda Putra/);
-  assert.match(decoded, /Rp348\.000/);
+  assert.match(decoded, /Biaya: \*Free\*/);
+  assert.doesNotMatch(decoded, /Rp\d/);
   assert.match(decoded, /Split Link/);
   assert.match(decoded, /https:\/\/anselmoments\.com\/order\/ANSL-7K9M2X/);
 });

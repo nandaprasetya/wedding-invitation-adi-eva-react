@@ -17,7 +17,6 @@ import {
 import {
   buildAdminWhatsappUrl,
   formatDateIndo,
-  formatRupiah,
 } from '../utils/orderHelpers';
 import { getOrderByCode, normalizeOrderCode } from '../services/orderService';
 import { OrderShell } from '../components/order/OrderShell';
@@ -182,8 +181,11 @@ export default function OrderStatusPage() {
     );
   }
 
-  const statusMeta = ORDER_STATUS_META[order.status] || ORDER_STATUS_META.pending_payment;
-  const activeStepIndex = ORDER_STATUS_STEPS.findIndex((s) => s.key === order.status);
+  const statusMeta =
+    ORDER_STATUS_META[order.status] || ORDER_STATUS_META.pending_confirmation;
+  const effectiveStatusKey =
+    order.status === 'pending_payment' ? 'pending_confirmation' : order.status;
+  const activeStepIndex = ORDER_STATUS_STEPS.findIndex((s) => s.key === effectiveStatusKey);
   const statusPageUrl = `${window.location.origin}/order/${order.orderCode}`;
   const waUrl = buildAdminWhatsappUrl(order, window.location.origin);
 
@@ -199,7 +201,7 @@ export default function OrderStatusPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6">
         {justCreated && (
           <div className="rounded-2xl bg-goldSand-100 border border-goldSand-200 px-5 py-4 text-sm text-codGray-950">
-            Pesanan Anda berhasil disimpan. Lanjutkan konfirmasi ke WhatsApp Admin di bawah ini untuk menerima detail pembayaran.
+            Pesanan Anda berhasil disimpan. Lanjutkan konfirmasi ke WhatsApp Admin di bawah ini agar undangan segera diproses.
           </div>
         )}
 
@@ -249,17 +251,17 @@ export default function OrderStatusPage() {
             </button>
           </div>
 
-          {/* Payment CTA Box */}
+          {/* Confirmation CTA Box */}
           <div className="rounded-2xl bg-goldSand-100 p-5 sm:p-6 space-y-4">
             <div className="flex flex-wrap items-baseline justify-between gap-4">
               <div>
-                <p className="text-xs text-codGray-500">Total Estimasi Tagihan</p>
-                <p className="font-ibarra text-3xl font-semibold text-codGray-950 tabular-nums mt-0.5">
-                  {formatRupiah(order.pricing?.totalPrice)}
+                <p className="text-xs text-codGray-500">Biaya Pemesanan</p>
+                <p className="font-ibarra text-3xl font-semibold text-goldSand-800 mt-0.5">
+                  Free
                 </p>
               </div>
               <p className="text-xs text-codGray-500 max-w-xs">
-                Detail rekening atau QRIS pembayaran akan dikirimkan langsung oleh admin melalui WhatsApp.
+                Konfirmasi pesanan dan pengiriman foto tambahan (jika ada) dapat dilanjutkan langsung melalui WhatsApp Admin.
               </p>
             </div>
 
@@ -270,7 +272,7 @@ export default function OrderStatusPage() {
               className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-goldSand-300 hover:bg-goldSand-400 px-6 py-3.5 text-sm sm:text-base font-medium text-codGray-950 transition-colors"
             >
               <MessageCircle size={18} />
-              <span>Konfirmasi &amp; Bayar via WhatsApp</span>
+              <span>Konfirmasi Pesanan via WhatsApp</span>
             </a>
           </div>
         </section>
@@ -387,11 +389,9 @@ export default function OrderStatusPage() {
 
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-codGray-500">Paket &amp; Add-On</dt>
-              <dd className="font-medium text-codGray-950 sm:text-right tabular-nums">
-                Paket {order.packageName} ({formatRupiah(order.pricing?.basePrice)})
-                {order.addons?.splitLink
-                  ? ` + ${ORDER_ADDONS.splitLink.name} (${formatRupiah(ORDER_ADDONS.splitLink.price)})`
-                  : ''}
+              <dd className="font-medium text-codGray-950 sm:text-right">
+                Paket {order.packageName}
+                {order.addons?.splitLink ? ` + ${ORDER_ADDONS.splitLink.name}` : ''} · Free
               </dd>
             </div>
 

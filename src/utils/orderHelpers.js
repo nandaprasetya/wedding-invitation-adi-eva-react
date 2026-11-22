@@ -92,6 +92,7 @@ export function isValidOptionalHttpUrl(raw) {
 
 export function formatRupiah(amount) {
   const num = Number(amount) || 0;
+  if (num <= 0) return 'Free';
   return `Rp${Math.round(num).toLocaleString('id-ID')}`;
 }
 
@@ -269,7 +270,7 @@ export function buildOrderPayload(form, orderCode) {
   return {
     orderCode,
     schemaVersion: 1,
-    status: 'pending_payment',
+    status: 'pending_confirmation',
     eventType: form.eventType || 'pernikahan',
     hasMepandes: Boolean(form.hasMepandes),
     allowSocialMedia: Boolean(form.allowSocialMedia),
@@ -371,24 +372,24 @@ export function buildAdminWhatsappUrl(order, origin) {
     `• Nama Pemesan: ${order?.contact?.customerName || '-'}`,
     `• Mempelai: ${coupleTitle || '-'}`,
     `• Tema: ${order.themeName || '-'}`,
-    `• Paket: ${order.packageName} (${formatRupiah(order?.pricing?.basePrice)})`,
+    `• Paket: ${order.packageName} (Free)`,
   ];
 
   if (order?.addons?.splitLink) {
-    lines.push(`• Add-On: ${ORDER_ADDONS.splitLink.name} (+${formatRupiah(ORDER_ADDONS.splitLink.price)})`);
+    lines.push(`• Add-On: ${ORDER_ADDONS.splitLink.name} (Free)`);
   }
   if (order?.hasMepandes) {
     lines.push('• Tambahan Acara: Metatah / Mepandes');
   }
 
   lines.push(
-    `• Total Estimasi: *${formatRupiah(order?.pricing?.totalPrice)}*`,
+    '• Biaya: *Free*',
     `• Request Link: ${BRAND_CONFIG.domain}/${order.requestedSlug}`,
     '',
     'Link status pesanan:',
     `${baseOrigin}/order/${order.orderCode}`,
     '',
-    'Mohon informasi metode pembayaran untuk melanjutkan proses pengerjaan ya. Terima kasih!'
+    'Mohon konfirmasi untuk melanjutkan proses pengerjaan undangan ya. Terima kasih!'
   );
 
   return `https://wa.me/${BRAND_CONFIG.adminWhatsapp}?text=${encodeURIComponent(lines.join('\n'))}`;

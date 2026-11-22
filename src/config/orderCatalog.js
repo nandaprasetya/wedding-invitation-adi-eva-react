@@ -42,7 +42,7 @@ export const ORDER_PACKAGES = [
   {
     id: 'premium',
     name: 'Premium',
-    price: 299000,
+    price: 0,
     recommended: true,
     summary: 'Aktif 1 tahun, seluruh fitur lengkap tanpa batas tamu.',
     features: [
@@ -55,7 +55,7 @@ export const ORDER_PACKAGES = [
   {
     id: 'standard',
     name: 'Standard',
-    price: 199000,
+    price: 0,
     recommended: false,
     summary: 'Aktif 6 bulan, fitur inti undangan digital modern.',
     features: [
@@ -71,7 +71,7 @@ export const ORDER_ADDONS = {
   splitLink: {
     id: 'splitLink',
     name: 'Split Link',
-    price: 49000,
+    price: 0,
     description:
       'Buat 2 link undangan berbeda dari 1 pesanan. Cocok untuk membedakan info acara antara tamu umum dan keluarga dekat.',
   },
@@ -88,14 +88,14 @@ export const ORDER_STEPS = [
 
 export const ORDER_STATUS_STEPS = [
   {
-    key: 'pending_payment',
-    label: 'Menunggu Pembayaran',
-    description: 'Konfirmasi pesanan ke WhatsApp admin untuk mendapatkan detail pembayaran.',
+    key: 'pending_confirmation',
+    label: 'Menunggu Konfirmasi',
+    description: 'Konfirmasi pesanan ke WhatsApp admin agar tim kami segera memproses undangan Anda.',
   },
   {
     key: 'in_progress',
     label: 'Sedang Dikerjakan',
-    description: 'Pembayaran diterima. Tim kami sedang menyusun undangan sesuai data Anda.',
+    description: 'Pesanan dikonfirmasi. Tim kami sedang menyusun undangan sesuai data Anda.',
   },
   {
     key: 'preview_ready',
@@ -110,7 +110,8 @@ export const ORDER_STATUS_STEPS = [
 ];
 
 export const ORDER_STATUS_META = {
-  pending_payment: { label: 'Menunggu Pembayaran', tone: 'sand' },
+  pending_confirmation: { label: 'Menunggu Konfirmasi', tone: 'sand' },
+  pending_payment: { label: 'Menunggu Konfirmasi', tone: 'sand' },
   in_progress: { label: 'Sedang Dikerjakan', tone: 'sand' },
   preview_ready: { label: 'Siap Preview', tone: 'bronze' },
   published: { label: 'Undangan Aktif', tone: 'dark' },

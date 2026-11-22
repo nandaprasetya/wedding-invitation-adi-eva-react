@@ -12,9 +12,7 @@ import {
   createEmptyMepandes,
 } from '../../config/orderCatalog';
 import {
-  calculateOrderPricing,
   formatDateIndo,
-  formatRupiah,
   sanitizeInstagram,
   slugifyText,
 } from '../../utils/orderHelpers';
@@ -842,8 +840,8 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
                       </span>
                     )}
                   </div>
-                  <p className="font-ibarra text-3xl font-semibold text-codGray-950 tabular-nums mt-2">
-                    {formatRupiah(pkg.price)}
+                  <p className="font-ibarra text-2xl font-semibold text-goldSand-800 mt-2">
+                    Free
                   </p>
                   <p className="text-xs text-codGray-500 mt-1.5">{pkg.summary}</p>
                   <ul className="mt-4 space-y-1.5 text-xs text-codGray-900">
@@ -1072,7 +1070,7 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
           <SwitchRow
             id="switch-split-link"
             title={ORDER_ADDONS.splitLink.name}
-            badge={`+${formatRupiah(ORDER_ADDONS.splitLink.price)}`}
+            badge="Free"
             description={ORDER_ADDONS.splitLink.description}
             checked={form.addons.splitLink}
             onChange={(enabled) =>
@@ -1167,7 +1165,6 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
 export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
   const theme = ORDER_THEMES.find((t) => t.id === form.themeId);
   const pkg = ORDER_PACKAGES.find((p) => p.id === form.packageId) || ORDER_PACKAGES[0];
-  const pricing = calculateOrderPricing(pkg.id, form.addons);
 
   return (
     <div className="space-y-8">
@@ -1176,7 +1173,7 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
           Kontak &amp; <span className="italic text-goldSand-800">Konfirmasi</span>
         </h2>
         <p className="text-sm text-codGray-500 mt-1.5">
-          Periksa kembali ringkasan pesanan Anda dan masukkan nomor WhatsApp aktif untuk konfirmasi pembayaran.
+          Periksa kembali ringkasan pesanan Anda dan masukkan nomor WhatsApp aktif untuk konfirmasi.
         </p>
       </div>
 
@@ -1243,7 +1240,7 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
             id="contact-whatsapp"
             label="Nomor WhatsApp Aktif"
             required
-            hint="Kami akan mengirimkan informasi pembayaran dan link preview ke nomor ini."
+            hint="Kami akan mengirimkan konfirmasi pesanan dan link preview ke nomor ini."
             error={errors['contact.whatsapp']}
           >
             <input
@@ -1341,10 +1338,8 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
             <div>
               <p className="text-xs text-codGray-500">Paket &amp; Fitur</p>
               <p className="font-medium text-codGray-950 mt-0.5">
-                Paket {pkg.name} ({formatRupiah(pricing.basePrice)})
-                {form.addons.splitLink
-                  ? ` + ${ORDER_ADDONS.splitLink.name} (${formatRupiah(ORDER_ADDONS.splitLink.price)})`
-                  : ''}
+                Paket {pkg.name}
+                {form.addons.splitLink ? ` + ${ORDER_ADDONS.splitLink.name}` : ''} · Free
               </p>
               <p className="text-xs text-codGray-500 mt-0.5">
                 {[
@@ -1368,13 +1363,13 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
 
         <div className="pt-4 border-t border-goldSand-200 flex items-baseline justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-codGray-950">Total Estimasi Pembayaran</p>
+            <p className="text-sm font-medium text-codGray-950">Biaya Pemesanan</p>
             <p className="text-xs text-codGray-500 mt-0.5">
-              Detail pembayaran akan dikirimkan oleh admin via WhatsApp setelah pesanan dibuat.
+              Konfirmasi pesanan dilanjutkan melalui WhatsApp Admin setelah formulir dikirim.
             </p>
           </div>
-          <span className="font-ibarra text-3xl font-semibold text-codGray-950 tabular-nums shrink-0">
-            {formatRupiah(pricing.totalPrice)}
+          <span className="font-ibarra text-3xl font-semibold text-goldSand-800 shrink-0">
+            Free
           </span>
         </div>
       </section>

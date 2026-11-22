@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
 import {
   BRAND_CONFIG,
-  ORDER_PACKAGES,
   ORDER_STEPS,
   createInitialOrderState,
 } from '../config/orderCatalog';
 import {
-  calculateOrderPricing,
-  formatRupiah,
   generateSlug,
   validateStep,
 } from '../utils/orderHelpers';
@@ -197,8 +194,6 @@ export default function OrderPage() {
     }
   };
 
-  const selectedPkg = ORDER_PACKAGES.find((p) => p.id === form.packageId) || ORDER_PACKAGES[0];
-  const pricing = calculateOrderPricing(selectedPkg.id, form.addons);
   const isLastStep = step === ORDER_STEPS.length;
 
   return (
@@ -210,7 +205,7 @@ export default function OrderPage() {
             Pesan <span className="italic text-goldSand-800">Undangan Digital</span> Anda
           </h1>
           <p className="text-base text-codGray-900 mt-3 leading-relaxed">
-            Lengkapi detail acara dalam enam langkah singkat. Pembayaran dikonfirmasi langsung melalui WhatsApp setelah pesanan dibuat.
+            Lengkapi detail acara dalam enam langkah singkat. Semua paket saat ini gratis dan konfirmasi dilanjutkan melalui WhatsApp.
           </p>
         </div>
 
@@ -346,9 +341,9 @@ export default function OrderPage() {
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-codGray-100 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-codGray-500">Total Estimasi</p>
-            <p className="font-ibarra text-xl font-semibold text-codGray-950 tabular-nums leading-tight">
-              {formatRupiah(pricing.totalPrice)}
+            <p className="text-xs text-codGray-500">Biaya</p>
+            <p className="font-ibarra text-xl font-semibold text-goldSand-800 leading-tight">
+              Free
             </p>
           </div>
 
