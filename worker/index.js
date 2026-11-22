@@ -10,7 +10,22 @@ import {
   generateOrderCode,
   normalizeWhatsapp,
 } from '../src/utils/orderHelpers.js';
-import { requireAdmin } from './accessAuth.js';
+import {
+  LOGIN_LOCKOUT_MS,
+  MAX_FAILED_LOGIN_ATTEMPTS,
+  buildClearSessionCookie,
+  buildSessionCookie,
+  getAuthenticatedAdmin,
+  hashPassword,
+  isLocalRequestUrl,
+  isValidAdminEmail,
+  requireAdmin,
+  resolveSessionSecret,
+  signSessionToken,
+  timingSafeEqualStrings,
+  validateAdminPassword,
+  verifyPassword,
+} from './accessAuth.js';
 import {
   buildMediaPublicUrl,
   computeServerPricing,
@@ -468,9 +483,423 @@ app.get('/api/media/*', async (c) => {
   return new Response(object.body, { headers });
 });
 
-// Admin routes (Cloudflare Access protected)
+// Public Multi-Admin Authentication routes (/api/auth/admin/*)
+const ALLOWED_ADMIN_ROLES = new Set(['owner', 'admin']);
+
+function mapAdminUserRow(row) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role: row.role || 'admin',
+    isActive: Number(row.is_active) === 1,
+    lastLoginAt: row.last_login_at || null,
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
+  };
+}
+
+app.get('/api/auth/admin/status', async (c) => {
+  const countRow = await c.env.DB.prepare('SELECT COUNT(*) AS total FROM admin_users').first();
+  const totalAdmins = Number(countRow?.total) || 0;
+  const secret = resolveSessionSecret(c.env, c.req.url);
+  const isLocalBypass = isLocalRequestUrl(c.req.url) && c.env?.DEV_BYPASS_ACCESS === 'true';
+  const hasExplicitSecret = String(c.env?.ADMIN_SESSION_SECRET || '').trim().length >= 16;
+  const admin = totalAdmins > 0 ? await getAuthenticatedAdmin(c) : null;
+
+  return c.json({
+    needsSetup: totalAdmins === 0,
+    configured: Boolean(secret),
+    requireSetupKey: !isLocalBypass || hasExplicitSecret,
+    authenticated: Boolean(admin),
+    admin,
+  });
+});
+
+app.post('/api/auth/admin/setup', async (c) => {
+  const secret = resolveSessionSecret(c.env, c.req.url);
+  if (!secret) {
+    return c.json(
+      { error: 'ADMIN_SESSION_SECRET belum dikonfigurasi di Cloudflare Workers.' },
+      503
+    );
+  }
+
+  const countRow = await c.env.DB.prepare('SELECT COUNT(*) AS total FROM admin_users').first();
+  if ((Number(countRow?.total) || 0) > 0) {
+    return c.json({ error: 'Akun admin awal sudah dibuat. Silakan login.' }, 403);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const isLocalBypass = isLocalRequestUrl(c.req.url) && c.env?.DEV_BYPASS_ACCESS === 'true';
+  const hasExplicitSecret = String(c.env?.ADMIN_SESSION_SECRET || '').trim().length >= 16;
+  if (!isLocalBypass || hasExplicitSecret) {
+    const setupKey = String(body.setupKey || '').trim();
+    const keyValid = await timingSafeEqualStrings(setupKey, secret);
+    if (!keyValid) {
+      return c.json({ error: 'Secret key tidak cocok dengan ADMIN_SESSION_SECRET.' }, 403);
+    }
+  }
+
+  const name = String(body.name || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  const pwCheck = validateAdminPassword(body.password);
+
+  if (name.length < 2 || name.length > 80) {
+    return c.json({ error: 'Nama admin wajib diisi (2–80 karakter).' }, 400);
+  }
+  if (!isValidAdminEmail(email)) {
+    return c.json({ error: 'Format email admin tidak valid.' }, 400);
+  }
+  if (!pwCheck.ok) {
+    return c.json({ error: pwCheck.error }, 400);
+  }
+
+  const passwordHash = await hashPassword(pwCheck.password);
+  const id = crypto.randomUUID();
+
+  try {
+    const row = await c.env.DB.prepare(
+      `INSERT INTO admin_users (id, email, name, role, password_hash, token_version, is_active, last_login_at)
+       SELECT ?, ?, ?, 'owner', ?, 1, 1, CURRENT_TIMESTAMP
+       WHERE (SELECT COUNT(*) FROM admin_users) = 0
+       RETURNING id, email, name, role, token_version, is_active`
+    )
+      .bind(id, email, name, passwordHash)
+      .first();
+
+    if (!row) {
+      return c.json({ error: 'Akun admin awal sudah dibuat. Silakan login.' }, 403);
+    }
+
+    const token = await signSessionToken(
+      { sub: row.id, email: row.email, name: row.name, role: row.role, tv: row.token_version },
+      secret
+    );
+    const isSecure = new URL(c.req.url).protocol === 'https:';
+    c.header('Set-Cookie', buildSessionCookie(token, { isSecure }));
+
+    return c.json(
+      {
+        admin: { id: row.id, email: row.email, name: row.name, role: row.role },
+      },
+      201
+    );
+  } catch (err) {
+    if (isSqliteUniqueError(err)) {
+      return c.json({ error: 'Email sudah terdaftar.' }, 409);
+    }
+    throw err;
+  }
+});
+
+app.post('/api/auth/admin/login', async (c) => {
+  const secret = resolveSessionSecret(c.env, c.req.url);
+  if (!secret) {
+    return c.json(
+      { error: 'ADMIN_SESSION_SECRET belum dikonfigurasi di Cloudflare Workers.' },
+      503
+    );
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const email = String(body.email || '').trim().toLowerCase();
+  const password = String(body.password || '');
+
+  if (!email || !password) {
+    return c.json({ error: 'Email dan password wajib diisi.' }, 400);
+  }
+
+  const user = await c.env.DB.prepare('SELECT * FROM admin_users WHERE email = ?')
+    .bind(email)
+    .first();
+
+  if (user && user.locked_until) {
+    const lockUntilMs = new Date(user.locked_until).getTime();
+    if (!Number.isNaN(lockUntilMs) && lockUntilMs > Date.now()) {
+      const waitMin = Math.max(1, Math.ceil((lockUntilMs - Date.now()) / 60_000));
+      return c.json(
+        { error: `Terlalu banyak percobaan login gagal. Coba lagi dalam ${waitMin} menit.` },
+        429
+      );
+    }
+  }
+
+  if (!user || Number(user.is_active) !== 1) {
+    return c.json({ error: 'Email atau password salah.' }, 401);
+  }
+
+  const valid = await verifyPassword(password, user.password_hash);
+  if (!valid) {
+    const nextFailed = (Number(user.failed_attempts) || 0) + 1;
+    const lockedUntil =
+      nextFailed >= MAX_FAILED_LOGIN_ATTEMPTS
+        ? new Date(Date.now() + LOGIN_LOCKOUT_MS).toISOString()
+        : null;
+    await c.env.DB.prepare(
+      'UPDATE admin_users SET failed_attempts = ?, locked_until = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    )
+      .bind(nextFailed, lockedUntil, user.id)
+      .run();
+
+    if (lockedUntil) {
+      return c.json(
+        { error: 'Terlalu banyak percobaan gagal. Akun dikunci sementara selama 15 menit.' },
+        429
+      );
+    }
+    return c.json({ error: 'Email atau password salah.' }, 401);
+  }
+
+  await c.env.DB.prepare(
+    'UPDATE admin_users SET failed_attempts = 0, locked_until = NULL, last_login_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+  )
+    .bind(user.id)
+    .run();
+
+  const token = await signSessionToken(
+    { sub: user.id, email: user.email, name: user.name, role: user.role, tv: user.token_version },
+    secret
+  );
+  const isSecure = new URL(c.req.url).protocol === 'https:';
+  c.header('Set-Cookie', buildSessionCookie(token, { isSecure }));
+
+  return c.json({
+    admin: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role || 'admin',
+    },
+  });
+});
+
+app.post('/api/auth/admin/logout', (c) => {
+  const isSecure = new URL(c.req.url).protocol === 'https:';
+  c.header('Set-Cookie', buildClearSessionCookie({ isSecure }));
+  return c.json({ ok: true });
+});
+
+// Admin routes (D1 multi-admin signed HttpOnly cookie protected)
 app.use('/api/admin/*', requireAdmin);
-app.get('/api/admin/me', (c) => c.json({ email: c.get('adminEmail') }));
+app.get('/api/admin/me', (c) =>
+  c.json({ email: c.get('adminEmail'), admin: c.get('adminUser') })
+);
+
+app.post('/api/admin/change-password', async (c) => {
+  const currentAdmin = c.get('adminUser');
+  const secret = resolveSessionSecret(c.env, c.req.url);
+  if (!secret) {
+    return c.json({ error: 'ADMIN_SESSION_SECRET belum dikonfigurasi.' }, 503);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const currentPassword = String(body.currentPassword || '');
+  const pwCheck = validateAdminPassword(body.newPassword);
+  if (!currentPassword) {
+    return c.json({ error: 'Password lama wajib diisi.' }, 400);
+  }
+  if (!pwCheck.ok) {
+    return c.json({ error: pwCheck.error }, 400);
+  }
+
+  const user = await c.env.DB.prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(currentAdmin.id)
+    .first();
+  if (!user) {
+    return c.json({ error: 'Akun admin tidak ditemukan.' }, 404);
+  }
+
+  const valid = await verifyPassword(currentPassword, user.password_hash);
+  if (!valid) {
+    return c.json({ error: 'Password lama tidak sesuai.' }, 400);
+  }
+
+  const nextHash = await hashPassword(pwCheck.password);
+  const updated = await c.env.DB.prepare(
+    `UPDATE admin_users
+     SET password_hash = ?, token_version = token_version + 1, failed_attempts = 0, locked_until = NULL, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?
+     RETURNING id, email, name, role, token_version`
+  )
+    .bind(nextHash, user.id)
+    .first();
+
+  const token = await signSessionToken(
+    {
+      sub: updated.id,
+      email: updated.email,
+      name: updated.name,
+      role: updated.role,
+      tv: updated.token_version,
+    },
+    secret
+  );
+  const isSecure = new URL(c.req.url).protocol === 'https:';
+  c.header('Set-Cookie', buildSessionCookie(token, { isSecure }));
+
+  return c.json({ ok: true });
+});
+
+// Multi-admin user management
+app.get('/api/admin/users', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT id, email, name, role, is_active, last_login_at, created_at, updated_at
+     FROM admin_users
+     ORDER BY CASE WHEN role = 'owner' THEN 0 ELSE 1 END, created_at ASC`
+  ).all();
+  return c.json({ users: (results || []).map(mapAdminUserRow) });
+});
+
+app.post('/api/admin/users', async (c) => {
+  const currentAdmin = c.get('adminUser');
+  if (currentAdmin?.role !== 'owner') {
+    return c.json({ error: 'Hanya Owner yang dapat menambahkan akun admin baru.' }, 403);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const name = String(body.name || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  const role = ALLOWED_ADMIN_ROLES.has(body.role) ? body.role : 'admin';
+  const pwCheck = validateAdminPassword(body.password);
+
+  if (name.length < 2 || name.length > 80) {
+    return c.json({ error: 'Nama admin wajib diisi (2–80 karakter).' }, 400);
+  }
+  if (!isValidAdminEmail(email)) {
+    return c.json({ error: 'Format email admin tidak valid.' }, 400);
+  }
+  if (!pwCheck.ok) {
+    return c.json({ error: pwCheck.error }, 400);
+  }
+
+  const passwordHash = await hashPassword(pwCheck.password);
+  const id = crypto.randomUUID();
+
+  try {
+    const row = await c.env.DB.prepare(
+      `INSERT INTO admin_users (id, email, name, role, password_hash, token_version, is_active)
+       VALUES (?, ?, ?, ?, ?, 1, 1)
+       RETURNING id, email, name, role, is_active, last_login_at, created_at, updated_at`
+    )
+      .bind(id, email, name, role, passwordHash)
+      .first();
+
+    return c.json({ user: mapAdminUserRow(row) }, 201);
+  } catch (err) {
+    if (isSqliteUniqueError(err)) {
+      return c.json({ error: `Email "${email}" sudah terdaftar.` }, 409);
+    }
+    throw err;
+  }
+});
+
+app.patch('/api/admin/users/:id', async (c) => {
+  const currentAdmin = c.get('adminUser');
+  if (currentAdmin?.role !== 'owner') {
+    return c.json({ error: 'Hanya Owner yang dapat mengubah akun admin lain.' }, 403);
+  }
+
+  const targetId = c.req.param('id');
+  const existing = await c.env.DB.prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(targetId)
+    .first();
+  if (!existing) {
+    return c.json({ error: 'Akun admin tidak ditemukan.' }, 404);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const nextName =
+    body.name !== undefined ? String(body.name || '').trim() : existing.name;
+  if (nextName.length < 2 || nextName.length > 80) {
+    return c.json({ error: 'Nama admin wajib diisi (2–80 karakter).' }, 400);
+  }
+
+  const nextRole =
+    body.role !== undefined && ALLOWED_ADMIN_ROLES.has(body.role) ? body.role : existing.role;
+  const nextActive =
+    body.isActive !== undefined ? (body.isActive ? 1 : 0) : Number(existing.is_active);
+
+  if (targetId === currentAdmin.id && nextActive === 0) {
+    return c.json({ error: 'Anda tidak dapat menonaktifkan akun Anda sendiri.' }, 400);
+  }
+
+  const wasActiveOwner = existing.role === 'owner' && Number(existing.is_active) === 1;
+  const staysActiveOwner = nextRole === 'owner' && nextActive === 1;
+  if (wasActiveOwner && !staysActiveOwner) {
+    const otherOwner = await c.env.DB.prepare(
+      "SELECT id FROM admin_users WHERE role = 'owner' AND is_active = 1 AND id != ? LIMIT 1"
+    )
+      .bind(targetId)
+      .first();
+    if (!otherOwner) {
+      return c.json(
+        { error: 'Minimal harus tersisa satu akun Owner aktif di sistem.' },
+        400
+      );
+    }
+  }
+
+  let nextHash = existing.password_hash;
+  let bumpTokenVersion = nextActive === 0 && Number(existing.is_active) === 1;
+  if (body.newPassword) {
+    const pwCheck = validateAdminPassword(body.newPassword);
+    if (!pwCheck.ok) {
+      return c.json({ error: pwCheck.error }, 400);
+    }
+    nextHash = await hashPassword(pwCheck.password);
+    bumpTokenVersion = true;
+  }
+
+  const nextTokenVersion = bumpTokenVersion
+    ? (Number(existing.token_version) || 1) + 1
+    : Number(existing.token_version) || 1;
+
+  const updated = await c.env.DB.prepare(
+    `UPDATE admin_users
+     SET name = ?, role = ?, is_active = ?, password_hash = ?, token_version = ?,
+         failed_attempts = 0, locked_until = NULL, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?
+     RETURNING id, email, name, role, is_active, last_login_at, created_at, updated_at`
+  )
+    .bind(nextName, nextRole, nextActive, nextHash, nextTokenVersion, targetId)
+    .first();
+
+  return c.json({ user: mapAdminUserRow(updated) });
+});
+
+app.delete('/api/admin/users/:id', async (c) => {
+  const currentAdmin = c.get('adminUser');
+  if (currentAdmin?.role !== 'owner') {
+    return c.json({ error: 'Hanya Owner yang dapat menghapus akun admin.' }, 403);
+  }
+
+  const targetId = c.req.param('id');
+  if (targetId === currentAdmin.id) {
+    return c.json({ error: 'Anda tidak dapat menghapus akun Anda sendiri.' }, 400);
+  }
+
+  const existing = await c.env.DB.prepare('SELECT id, role, is_active FROM admin_users WHERE id = ?')
+    .bind(targetId)
+    .first();
+  if (!existing) {
+    return c.json({ error: 'Akun admin tidak ditemukan.' }, 404);
+  }
+
+  if (existing.role === 'owner' && Number(existing.is_active) === 1) {
+    const otherOwner = await c.env.DB.prepare(
+      "SELECT id FROM admin_users WHERE role = 'owner' AND is_active = 1 AND id != ? LIMIT 1"
+    )
+      .bind(targetId)
+      .first();
+    if (!otherOwner) {
+      return c.json({ error: 'Minimal harus tersisa satu akun Owner aktif.' }, 400);
+    }
+  }
+
+  await c.env.DB.prepare('DELETE FROM admin_users WHERE id = ?').bind(targetId).run();
+  return c.json({ ok: true });
+});
 
 // Admin Orders
 app.get('/api/admin/orders', async (c) => {

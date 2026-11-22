@@ -1,7 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildDefaultSectionsForOrder } from '../src/templates/registry.js';
-import { verifyAccessJwt } from './accessAuth.js';
+import {
+  buildClearSessionCookie,
+  buildSessionCookie,
+  hashPassword,
+  isValidAdminEmail,
+  parseCookies,
+  resolveSessionSecret,
+  signSessionToken,
+  timingSafeEqualStrings,
+  validateAdminPassword,
+  verifyPassword,
+  verifySessionToken,
+} from './accessAuth.js';
 import {
   maskWhatsapp,
   computeServerPricing,
@@ -231,85 +243,58 @@ test('validateUploadFile, sanitizeR2KeySegment, and isReservedSlug enforce uploa
   );
 });
 
-function toBase64Url(input) {
-  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : new Uint8Array(input);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
+test('PBKDF2 password hashing and HMAC session cookies enforce authentication security', async () => {
+  const hash = await hashPassword('RahasiaStudio#2026');
+  assert.match(hash, /^pbkdf2_sha256\$100000\$[0-9a-f]{32}\$[0-9a-f]{64}$/);
+  assert.equal(await verifyPassword('RahasiaStudio#2026', hash), true);
+  assert.equal(await verifyPassword('PasswordSalah123', hash), false);
+  assert.equal(await verifyPassword('RahasiaStudio#2026', 'invalid-format'), false);
 
-async function signTestJwt(privateKey, header, payload) {
-  const signingInput = `${toBase64Url(JSON.stringify(header))}.${toBase64Url(JSON.stringify(payload))}`;
-  const sig = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    privateKey,
-    new TextEncoder().encode(signingInput)
+  assert.equal(isValidAdminEmail('owner@anselmoments.com'), true);
+  assert.equal(isValidAdminEmail('not-an-email'), false);
+  assert.equal(validateAdminPassword('1234567').ok, false);
+  assert.equal(validateAdminPassword('12345678').ok, true);
+
+  assert.equal(await timingSafeEqualStrings('secret-key-123', 'secret-key-123'), true);
+  assert.equal(await timingSafeEqualStrings('secret-key-123', 'secret-key-124'), false);
+  assert.equal(await timingSafeEqualStrings('short', 'much-longer-string'), false);
+
+  const secret = 'super-secret-signing-key-at-least-32-chars';
+  const token = await signSessionToken(
+    { sub: 'usr-1', email: 'owner@anselmoments.com', name: 'Owner', role: 'owner', tv: 2 },
+    secret,
+    300
   );
-  return `${signingInput}.${toBase64Url(sig)}`;
-}
+  const payload = await verifySessionToken(token, secret);
+  assert.equal(payload.sub, 'usr-1');
+  assert.equal(payload.email, 'owner@anselmoments.com');
+  assert.equal(payload.tv, 2);
 
-test('verifyAccessJwt validates RS256 signature, issuer, audience, and expiry via Web Crypto', async () => {
-  const { publicKey, privateKey } = await crypto.subtle.generateKey(
-    {
-      name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-    },
-    true,
-    ['sign', 'verify']
+  await assert.rejects(() => verifySessionToken(token, 'wrong-secret-key-1234567890'), /signature/i);
+  await assert.rejects(() => verifySessionToken(`${token.slice(0, -4)}AAAA`, secret), /signature/i);
+
+  const expiredToken = await signSessionToken(
+    { sub: 'usr-1', email: 'owner@anselmoments.com', name: 'Owner', role: 'owner', tv: 1 },
+    secret,
+    -10
   );
+  await assert.rejects(() => verifySessionToken(expiredToken, secret), /expired/i);
 
-  const publicJwk = await crypto.subtle.exportKey('jwk', publicKey);
-  publicJwk.kid = 'test-key-1';
-  const teamDomain = 'https://ansel-test.cloudflareaccess.com';
-  const aud = 'test-aud-tag-123';
-  const nowSec = Math.floor(Date.now() / 1000);
+  const setCookie = buildSessionCookie(token, { isSecure: true, maxAge: 3600 });
+  assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /SameSite=Lax/);
+  assert.match(setCookie, /Secure/);
+  const parsed = parseCookies(`foo=bar; ansel_admin_session=${encodeURIComponent(token)}`);
+  assert.equal(parsed.ansel_admin_session, token);
+  assert.match(buildClearSessionCookie({ isSecure: true }), /Max-Age=0/);
 
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url) => {
-    assert.equal(url, `${teamDomain}/cdn-cgi/access/certs`);
-    return new Response(JSON.stringify({ keys: [publicJwk] }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    });
-  };
-
-  try {
-    const validJwt = await signTestJwt(
-      privateKey,
-      { alg: 'RS256', kid: 'test-key-1', typ: 'JWT' },
-      { iss: teamDomain, aud: [aud], email: 'admin@anselmoments.com', exp: nowSec + 300, nbf: nowSec - 10 }
-    );
-    const payload = await verifyAccessJwt(validJwt, { teamDomain, aud });
-    assert.equal(payload.email, 'admin@anselmoments.com');
-
-    const expiredJwt = await signTestJwt(
-      privateKey,
-      { alg: 'RS256', kid: 'test-key-1' },
-      { iss: teamDomain, aud: [aud], email: 'admin@anselmoments.com', exp: nowSec - 60 }
-    );
-    await assert.rejects(() => verifyAccessJwt(expiredJwt, { teamDomain, aud }), /expired/i);
-
-    const wrongAudJwt = await signTestJwt(
-      privateKey,
-      { alg: 'RS256', kid: 'test-key-1' },
-      { iss: teamDomain, aud: ['wrong-aud'], exp: nowSec + 300 }
-    );
-    await assert.rejects(() => verifyAccessJwt(wrongAudJwt, { teamDomain, aud }), /audience/i);
-
-    const wrongIssJwt = await signTestJwt(
-      privateKey,
-      { alg: 'RS256', kid: 'test-key-1' },
-      { iss: 'https://evil.example.com', aud: [aud], exp: nowSec + 300 }
-    );
-    await assert.rejects(() => verifyAccessJwt(wrongIssJwt, { teamDomain, aud }), /issuer/i);
-
-    const tamperedJwt = `${validJwt.slice(0, -4)}AAAA`;
-    await assert.rejects(() => verifyAccessJwt(tamperedJwt, { teamDomain, aud }), /signature/i);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+  assert.equal(resolveSessionSecret({}, 'https://anselmoments.com/api/auth/admin/login'), '');
+  assert.equal(
+    resolveSessionSecret({ DEV_BYPASS_ACCESS: 'true' }, 'http://localhost:8787/api/auth/admin/login').length >= 16,
+    true
+  );
+  assert.equal(
+    resolveSessionSecret({ ADMIN_SESSION_SECRET: secret }, 'https://anselmoments.com/api/auth/admin/login'),
+    secret
+  );
 });

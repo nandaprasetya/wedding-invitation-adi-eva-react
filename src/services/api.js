@@ -4,7 +4,7 @@ async function request(url, options = {}) {
     ? options.headers || {}
     : { 'Content-Type': 'application/json', ...(options.headers || {}) };
 
-  const res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, { credentials: 'same-origin', ...options, headers });
   const text = await res.text();
   let data = null;
   if (text) {
@@ -70,9 +70,65 @@ export function postWish(slug, wish, previewToken = '') {
   });
 }
 
-// Admin API (Cloudflare Access protected)
+// Multi-Admin Auth API
+export function getAdminAuthStatus() {
+  return request('/api/auth/admin/status');
+}
+
+export function setupFirstAdmin(payload) {
+  return request('/api/auth/admin/setup', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function loginAdmin(payload) {
+  return request('/api/auth/admin/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function logoutAdmin() {
+  return request('/api/auth/admin/logout', {
+    method: 'POST',
+  });
+}
+
+// Admin API (Signed HttpOnly cookie session protected)
 export function getAdminMe() {
   return request('/api/admin/me');
+}
+
+export function changeAdminPassword(payload) {
+  return request('/api/admin/change-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getAdminUsers() {
+  return request('/api/admin/users');
+}
+
+export function createAdminUser(payload) {
+  return request('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAdminUser(id, payload) {
+  return request(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteAdminUser(id) {
+  return request(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
 }
 
 export function getAdminOrders(status = '') {

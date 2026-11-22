@@ -7,13 +7,18 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/*", "!/assets/*", "!/favicon.ico", "!/logo-ansel.png"]
+    "run_worker_first": [
+      "/*",
+      "!/assets/*",
+      "!/favicon.ico",
+      "!/logo-ansel.png"
+    ]
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "ansel_db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "3962d4aa-533a-4f68-9c65-7b492af6140c",
       "migrations_dir": "migrations"
     }
   ],

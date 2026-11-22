@@ -1,8 +1,9 @@
-# Lokal dev saja — JANGAN set DEV_BYPASS_ACCESS di Cloudflare Dashboard produksi
+# Lokal dev saja (jangan set DEV_BYPASS_ACCESS di Cloudflare Workers produksi)
 DEV_BYPASS_ACCESS=true
-DEV_ADMIN_EMAIL=admin@anselmoments.com
 
-# Produksi (pasang di Cloudflare Workers -> Settings -> Variables and Secrets)
-CF_ACCESS_TEAM_DOMAIN=https://<team-name>.cloudflareaccess.com
-CF_ACCESS_AUD=<application-audience-tag>
+# Secret utama untuk tanda tangan cookie sesi & setup akun admin pertama (minimal 24 karakter acak)
+# Di produksi, pasang lewat: npx wrangler secret put ADMIN_SESSION_SECRET
+ADMIN_SESSION_SECRET=ganti-dengan-string-acak-minimal-24-karakter
+
+# Domain publik R2
 R2_PUBLIC_BASE_URL=https://media.anselmoments.com

@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  LogOut,
   Plus,
   RefreshCw,
   Trash2,
@@ -25,17 +26,21 @@ import {
   deleteAdminInvitation,
   deleteAdminMusicPreset,
   deleteAdminWish,
+  getAdminAuthStatus,
   getAdminInvitations,
-  getAdminMe,
   getAdminMusicPresets,
   getAdminOrders,
   getAdminPackages,
   getAdminTemplates,
+  getAdminUsers,
   getAdminWishes,
+  logoutAdmin,
   updateAdminOrderStatus,
   updateAdminPackage,
   updateAdminWish,
 } from '../services/api';
+import AdminAuthScreen from '../components/admin/AdminAuthScreen';
+import AdminUsersManager from '../components/admin/AdminUsersManager';
 import InvitationEditor from '../components/admin/InvitationEditor';
 import ThemesManager from '../components/admin/ThemesManager';
 
@@ -46,14 +51,21 @@ const TABS = [
   { id: 'packages', label: 'Paket & Harga' },
   { id: 'wishes', label: 'Buku Tamu' },
   { id: 'music', label: 'Musik Preset' },
+  { id: 'users', label: 'Akun Admin' },
 ];
 
 const INPUT_CLASS =
   'w-full rounded-xl border border-codGray-100 bg-white px-3.5 py-2.5 text-sm text-codGray-950 focus:border-goldSand-800 focus:outline-none';
 
 export default function AdminPage() {
-  const [adminEmail, setAdminEmail] = useState('');
-  const [authError, setAuthError] = useState('');
+  const [authStatus, setAuthStatus] = useState({
+    checking: true,
+    authenticated: false,
+    needsSetup: false,
+    configured: true,
+    requireSetupKey: true,
+    admin: null,
+  });
   const [activeTab, setActiveTab] = useState('orders');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -90,26 +102,53 @@ export default function AdminPage() {
   const [presetForm, setPresetForm] = useState({ title: '', artist: '', category: 'romantis', file: null });
   const [uploadingPreset, setUploadingPreset] = useState(false);
 
+  const [adminUsers, setAdminUsers] = useState([]);
   const [copiedId, setCopiedId] = useState('');
 
   useEffect(() => {
     document.title = `Admin Studio — ${BRAND_CONFIG.name}`;
   }, []);
 
+  const checkAuth = async () => {
+    try {
+      const status = await getAdminAuthStatus();
+      setAuthStatus({
+        checking: false,
+        authenticated: Boolean(status?.authenticated),
+        needsSetup: Boolean(status?.needsSetup),
+        configured: status?.configured !== false,
+        requireSetupKey: status?.requireSetupKey !== false,
+        admin: status?.admin || null,
+      });
+    } catch (err) {
+      setAuthStatus({
+        checking: false,
+        authenticated: false,
+        needsSetup: false,
+        configured: true,
+        requireSetupKey: true,
+        admin: null,
+      });
+      setError(err?.message || 'Gagal memeriksa status login.');
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   const loadAll = async () => {
     setLoading(true);
     setError('');
-    setAuthError('');
     try {
-      const me = await getAdminMe();
-      setAdminEmail(me?.email || 'admin');
-      const [ordRes, invRes, tplRes, pkgRes, wishRes, musicRes] = await Promise.all([
+      const [ordRes, invRes, tplRes, pkgRes, wishRes, musicRes, usersRes] = await Promise.all([
         getAdminOrders(orderStatusFilter),
         getAdminInvitations(),
         getAdminTemplates(),
         getAdminPackages(),
         getAdminWishes(wishInvitationFilter),
         getAdminMusicPresets(),
+        getAdminUsers(),
       ]);
       setOrders(ordRes?.orders || []);
       setInvitations(invRes?.invitations || []);
@@ -118,9 +157,10 @@ export default function AdminPage() {
       setPackages(pkgRes?.packages || []);
       setWishes(wishRes?.wishes || []);
       setMusicPresets(musicRes?.presets || []);
+      setAdminUsers(usersRes?.users || []);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setAuthError(err.message || 'Akses ditolak. Pastikan login melalui Cloudflare Access.');
+      if (err.status === 401) {
+        setAuthStatus((prev) => ({ ...prev, authenticated: false, admin: null }));
       } else {
         setError(err.message || 'Gagal memuat data admin.');
       }
@@ -130,9 +170,20 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    if (!authStatus.authenticated) return;
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderStatusFilter, wishInvitationFilter]);
+  }, [authStatus.authenticated, orderStatusFilter, wishInvitationFilter]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutAdmin();
+    } catch {
+      // ignore logout transport error and clear local state
+    }
+    setEditingInvitationId('');
+    setAuthStatus((prev) => ({ ...prev, authenticated: false, needsSetup: false, admin: null }));
+  };
 
   const copyText = (text, key) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -320,22 +371,35 @@ export default function AdminPage() {
     }
   };
 
-  if (authError) {
+  if (authStatus.checking) {
     return (
-      <div className="min-h-screen bg-goldSand-50 font-dm flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-2xl bg-white border border-codGray-100 p-8 space-y-4">
-          <h1 className="font-ibarra text-3xl font-semibold text-codGray-950">Akses Terbatas</h1>
-          <p className="text-sm text-codGray-600 leading-relaxed">{authError}</p>
-          <Link
-            to="/adi-eva"
-            className="inline-block rounded-2xl border border-codGray-900 px-5 py-2.5 text-sm font-medium text-codGray-900"
-          >
-            Kembali ke Beranda
-          </Link>
-        </div>
+      <div className="min-h-screen bg-goldSand-50 font-dm flex items-center justify-center p-6 text-sm text-codGray-500">
+        Memeriksa sesi admin...
       </div>
     );
   }
+
+  if (!authStatus.authenticated) {
+    return (
+      <AdminAuthScreen
+        needsSetup={authStatus.needsSetup}
+        configured={authStatus.configured}
+        requireSetupKey={authStatus.requireSetupKey}
+        onAuthenticated={(admin) => {
+          setAuthStatus({
+            checking: false,
+            authenticated: true,
+            needsSetup: false,
+            configured: true,
+            requireSetupKey: authStatus.requireSetupKey,
+            admin,
+          });
+        }}
+      />
+    );
+  }
+
+  const currentAdmin = authStatus.admin;
 
   return (
     <div className="min-h-screen bg-goldSand-50 font-dm text-codGray-900 flex flex-col">
@@ -347,7 +411,11 @@ export default function AdminPage() {
               <h1 className="font-ibarra text-xl font-semibold text-codGray-950 leading-none">
                 {BRAND_CONFIG.name} Studio
               </h1>
-              {adminEmail && <p className="text-xs text-codGray-500 mt-0.5">{adminEmail}</p>}
+              {currentAdmin && (
+                <p className="text-xs text-codGray-500 mt-0.5">
+                  {currentAdmin.name} ({currentAdmin.email}) · {currentAdmin.role === 'owner' ? 'Owner' : 'Admin'}
+                </p>
+              )}
             </div>
           </div>
 
@@ -371,6 +439,14 @@ export default function AdminPage() {
             >
               <RefreshCw size={13} />
               <span>Muat Ulang</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-codGray-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 cursor-pointer"
+            >
+              <LogOut size={13} />
+              <span>Keluar</span>
             </button>
           </div>
         </div>
@@ -1034,6 +1110,12 @@ export default function AdminPage() {
               </div>
             )}
           </section>
+        ) : activeTab === 'users' ? (
+          <AdminUsersManager
+            currentAdmin={currentAdmin}
+            users={adminUsers}
+            onUsersChange={setAdminUsers}
+          />
         ) : (
           <section className="space-y-4">
             <h2 className="font-ibarra text-3xl font-semibold text-codGray-950">Musik Preset</h2>
