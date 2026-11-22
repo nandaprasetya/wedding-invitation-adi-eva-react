@@ -1,0 +1,8 @@
+# Lokal dev saja — JANGAN set DEV_BYPASS_ACCESS di Cloudflare Dashboard produksi
+DEV_BYPASS_ACCESS=true
+DEV_ADMIN_EMAIL=admin@anselmoments.com
+
+# Produksi (pasang di Cloudflare Workers -> Settings -> Variables and Secrets)
+CF_ACCESS_TEAM_DOMAIN=https://<team-name>.cloudflareaccess.com
+CF_ACCESS_AUD=<application-audience-tag>
+R2_PUBLIC_BASE_URL=https://media.anselmoments.com

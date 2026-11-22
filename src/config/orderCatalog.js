@@ -1,3 +1,5 @@
+import { ACTIVE_TEMPLATES } from '../templates/registry.js';
+
 export const BRAND_CONFIG = {
   name: 'Ansel Moments',
   domain: 'anselmoments.com',
@@ -10,33 +12,8 @@ export const EVENT_TYPES = [
   { id: 'pernikahan', label: 'Pernikahan (Pawiwahan / Resepsi)' },
 ];
 
-// Ubah atau tambah tema baru di array ini; previewImage menggunakan aset lokal.
-export const ORDER_THEMES = [
-  {
-    id: 'editorial-classic',
-    name: 'Editorial Classic',
-    tag: 'Populer',
-    description: 'Split-screen gelap elegan dengan tipografi serif klasik dan galeri penuh.',
-    demoUrl: '/adi-eva',
-    previewImage: '/assets/img/GIK-1.png',
-  },
-  {
-    id: 'ivory-minimal',
-    name: 'Ivory Minimal',
-    tag: 'Minimalis',
-    description: 'Layout terang bersih dengan ruang lega dan sentuhan editorial modern.',
-    demoUrl: '/adi-eva',
-    previewImage: '/assets/img/GIK-14.png',
-  },
-  {
-    id: 'warm-sand',
-    name: 'Warm Sand',
-    tag: 'Hangat',
-    description: 'Nuansa krem hangat dan aksen perunggu yang intim untuk upacara adat Bali.',
-    demoUrl: '/adi-eva',
-    previewImage: '/assets/img/GIK-4.png',
-  },
-];
+// Single source of truth from src/templates/registry.js (1 active template: editorial-classic)
+export const ORDER_THEMES = ACTIVE_TEMPLATES;
 
 export const ORDER_PACKAGES = [
   {
@@ -69,7 +46,7 @@ export const ORDER_PACKAGES = [
 
 export const ORDER_ADDONS = {
   splitLink: {
-    id: 'splitLink',
+    id: 'split_link',
     name: 'Split Link',
     price: 0,
     description:
@@ -111,7 +88,7 @@ export const ORDER_STATUS_STEPS = [
 
 export const ORDER_STATUS_META = {
   pending_confirmation: { label: 'Menunggu Konfirmasi', tone: 'sand' },
-  pending_payment: { label: 'Menunggu Konfirmasi', tone: 'sand' },
+  pending_payment: { label: 'Menunggu Pembayaran', tone: 'sand' },
   in_progress: { label: 'Sedang Dikerjakan', tone: 'sand' },
   preview_ready: { label: 'Siap Preview', tone: 'bronze' },
   published: { label: 'Undangan Aktif', tone: 'dark' },
@@ -139,7 +116,7 @@ export function createInitialOrderState() {
     eventType: 'pernikahan',
     hasMepandes: false,
     allowSocialMedia: null,
-    themeId: '',
+    themeId: ACTIVE_TEMPLATES[0]?.id || 'editorial-classic',
     groom: {
       fullName: '',
       nickname: '',

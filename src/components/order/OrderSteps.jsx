@@ -12,7 +12,9 @@ import {
   createEmptyMepandes,
 } from '../../config/orderCatalog';
 import {
+  calculateOrderPricing,
   formatDateIndo,
+  formatRupiah,
   sanitizeInstagram,
   slugifyText,
 } from '../../utils/orderHelpers';
@@ -198,7 +200,8 @@ export function Step1Preferences({ form, errors, onChange }) {
   );
 }
 
-export function Step2Theme({ form, errors, onChange }) {
+export function Step2Theme({ form, errors, onChange, catalog = {} }) {
+  const themes = catalog.templates?.length ? catalog.templates : ORDER_THEMES;
   return (
     <div className="space-y-6">
       <div>
@@ -211,7 +214,7 @@ export function Step2Theme({ form, errors, onChange }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {ORDER_THEMES.map((theme) => {
+        {themes.map((theme) => {
           const selected = form.themeId === theme.id;
           return (
             <div
@@ -233,12 +236,18 @@ export function Step2Theme({ form, errors, onChange }) {
               }`}
             >
               <div className="aspect-[4/3] w-full overflow-hidden bg-codGray-50">
-                <img
-                  src={theme.previewImage}
-                  alt={`Preview tema ${theme.name}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-103"
-                />
+                {theme.previewImage ? (
+                  <img
+                    src={theme.previewImage}
+                    alt={`Preview tema ${theme.name}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-103"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-codGray-400">
+                    Preview belum tersedia
+                  </div>
+                )}
               </div>
 
               <div className="p-4 flex-1 flex flex-col justify-between gap-4">
@@ -263,17 +272,19 @@ export function Step2Theme({ form, errors, onChange }) {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-codGray-100/80">
-                  <span className="text-xs font-medium text-goldSand-800">{theme.tag}</span>
-                  <a
-                    href={theme.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-codGray-900 underline underline-offset-4 hover:text-goldSand-800"
-                  >
-                    <span>Lihat Demo</span>
-                    <ExternalLink size={12} />
-                  </a>
+                  <span className="text-xs font-medium text-goldSand-800">{theme.tag || 'Tema'}</span>
+                  {theme.demoUrl && (
+                    <a
+                      href={theme.demoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-codGray-900 underline underline-offset-4 hover:text-goldSand-800"
+                    >
+                      <span>Lihat Demo</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -764,7 +775,12 @@ export function Step4Events({ form, errors, onChange }) {
   );
 }
 
-export function Step5FeaturesMedia({ form, errors, onChange }) {
+export function Step5FeaturesMedia({ form, errors, onChange, catalog = {} }) {
+  const packages = catalog.packages?.length ? catalog.packages : ORDER_PACKAGES;
+  const splitLinkAddon =
+    catalog.addons && 'splitLink' in catalog.addons
+      ? catalog.addons.splitLink
+      : ORDER_ADDONS.splitLink;
   const toggleLoveStory = (enabled) => {
     onChange((prev) => ({
       ...prev,
@@ -816,7 +832,7 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
       <section className="space-y-3">
         <h3 className="font-ibarra text-2xl font-semibold text-codGray-950">Pilih Paket</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {ORDER_PACKAGES.map((pkg) => {
+          {packages.map((pkg) => {
             const selected = form.packageId === pkg.id;
             return (
               <button
@@ -840,8 +856,8 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
                       </span>
                     )}
                   </div>
-                  <p className="font-ibarra text-2xl font-semibold text-goldSand-800 mt-2">
-                    Free
+                  <p className="font-ibarra text-2xl font-semibold text-goldSand-800 mt-2 tabular-nums">
+                    {formatRupiah(pkg.price)}
                   </p>
                   <p className="text-xs text-codGray-500 mt-1.5">{pkg.summary}</p>
                   <ul className="mt-4 space-y-1.5 text-xs text-codGray-900">
@@ -1066,18 +1082,20 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
         </div>
 
         {/* Split Link Add-On */}
-        <div className="rounded-2xl border border-codGray-100 bg-white p-5">
-          <SwitchRow
-            id="switch-split-link"
-            title={ORDER_ADDONS.splitLink.name}
-            badge="Free"
-            description={ORDER_ADDONS.splitLink.description}
-            checked={form.addons.splitLink}
-            onChange={(enabled) =>
-              onChange((prev) => ({ ...prev, addons: { ...prev.addons, splitLink: enabled } }))
-            }
-          />
-        </div>
+        {splitLinkAddon && (
+          <div className="rounded-2xl border border-codGray-100 bg-white p-5">
+            <SwitchRow
+              id="switch-split-link"
+              title={splitLinkAddon.name}
+              badge={formatRupiah(splitLinkAddon.price)}
+              description={splitLinkAddon.summary || splitLinkAddon.description || ORDER_ADDONS.splitLink.description}
+              checked={form.addons.splitLink}
+              onChange={(enabled) =>
+                onChange((prev) => ({ ...prev, addons: { ...prev.addons, splitLink: enabled } }))
+              }
+            />
+          </div>
+        )}
       </section>
 
       {/* Media & Catatan */}
@@ -1162,9 +1180,19 @@ export function Step5FeaturesMedia({ form, errors, onChange }) {
   );
 }
 
-export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
-  const theme = ORDER_THEMES.find((t) => t.id === form.themeId);
-  const pkg = ORDER_PACKAGES.find((p) => p.id === form.packageId) || ORDER_PACKAGES[0];
+export function Step6ReviewContact({ form, errors, onChange, onJumpStep, catalog = {} }) {
+  const themes = catalog.templates?.length ? catalog.templates : ORDER_THEMES;
+  const packages = catalog.packages?.length ? catalog.packages : ORDER_PACKAGES;
+  const splitLinkAddon =
+    catalog.addons && 'splitLink' in catalog.addons
+      ? catalog.addons.splitLink
+      : ORDER_ADDONS.splitLink;
+  const theme = themes.find((t) => t.id === form.themeId);
+  const pkg = packages.find((p) => p.id === form.packageId) || packages[0];
+  const pricing = calculateOrderPricing(pkg.id, form.addons, {
+    packages,
+    addons: { splitLink: splitLinkAddon },
+  });
 
   return (
     <div className="space-y-8">
@@ -1339,7 +1367,8 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
               <p className="text-xs text-codGray-500">Paket &amp; Fitur</p>
               <p className="font-medium text-codGray-950 mt-0.5">
                 Paket {pkg.name}
-                {form.addons.splitLink ? ` + ${ORDER_ADDONS.splitLink.name}` : ''} · Free
+                {splitLinkAddon && form.addons.splitLink ? ` + ${splitLinkAddon.name}` : ''} ·{' '}
+                {formatRupiah(pricing.totalPrice)}
               </p>
               <p className="text-xs text-codGray-500 mt-0.5">
                 {[
@@ -1365,11 +1394,13 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep }) {
           <div>
             <p className="text-sm font-medium text-codGray-950">Biaya Pemesanan</p>
             <p className="text-xs text-codGray-500 mt-0.5">
-              Konfirmasi pesanan dilanjutkan melalui WhatsApp Admin setelah formulir dikirim.
+              {pricing.totalPrice > 0
+                ? 'Konfirmasi & pembayaran dilanjutkan melalui WhatsApp Admin setelah formulir dikirim.'
+                : 'Konfirmasi pesanan dilanjutkan melalui WhatsApp Admin setelah formulir dikirim.'}
             </p>
           </div>
-          <span className="font-ibarra text-3xl font-semibold text-goldSand-800 shrink-0">
-            Free
+          <span className="font-ibarra text-3xl font-semibold text-goldSand-800 shrink-0 tabular-nums">
+            {formatRupiah(pricing.totalPrice)}
           </span>
         </div>
       </section>

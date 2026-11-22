@@ -9,11 +9,13 @@ import {
   ORDER_THEMES,
 } from '../../config/orderCatalog';
 import {
+  calculateOrderPricing,
   formatDateIndo,
+  formatRupiah,
   generateSlug,
   slugifyText,
 } from '../../utils/orderHelpers';
-import { normalizeOrderCode } from '../../services/orderService';
+import { normalizeOrderCode } from '../../services/api';
 
 export function OrderShell({ children }) {
   const [lookupOpen, setLookupOpen] = useState(false);
@@ -232,9 +234,19 @@ export function StepProgress({ currentStep, maxVisitedStep, onSelectStep }) {
   );
 }
 
-export function OrderSummaryCard({ form, lastSavedAt }) {
-  const selectedTheme = ORDER_THEMES.find((t) => t.id === form.themeId);
-  const selectedPkg = ORDER_PACKAGES.find((p) => p.id === form.packageId) || ORDER_PACKAGES[0];
+export function OrderSummaryCard({ form, lastSavedAt, catalog = {} }) {
+  const themes = catalog.templates || ORDER_THEMES;
+  const packages = catalog.packages?.length ? catalog.packages : ORDER_PACKAGES;
+  const splitLinkAddon =
+    catalog.addons && 'splitLink' in catalog.addons
+      ? catalog.addons.splitLink
+      : ORDER_ADDONS.splitLink;
+  const selectedTheme = themes.find((t) => t.id === form.themeId);
+  const selectedPkg = packages.find((p) => p.id === form.packageId) || packages[0];
+  const pricing = calculateOrderPricing(selectedPkg.id, form.addons, {
+    packages,
+    addons: { splitLink: splitLinkAddon },
+  });
 
   const coupleTitle = [form.groom?.nickname?.trim(), form.bride?.nickname?.trim()]
     .filter(Boolean)
@@ -284,19 +296,25 @@ export function OrderSummaryCard({ form, lastSavedAt }) {
       <div className="pt-4 border-t border-goldSand-200 space-y-2.5 text-sm">
         <div className="flex justify-between gap-4">
           <span className="text-codGray-900">Paket {selectedPkg.name}</span>
-          <span className="font-medium text-goldSand-800">Free</span>
+          <span className="font-medium text-goldSand-800 tabular-nums">
+            {formatRupiah(pricing.basePrice)}
+          </span>
         </div>
 
-        {form.addons?.splitLink && (
+        {splitLinkAddon && form.addons?.splitLink && (
           <div className="flex justify-between gap-4">
-            <span className="text-codGray-900">{ORDER_ADDONS.splitLink.name}</span>
-            <span className="font-medium text-goldSand-800">Free</span>
+            <span className="text-codGray-900">{splitLinkAddon.name}</span>
+            <span className="font-medium text-goldSand-800 tabular-nums">
+              {formatRupiah(pricing.addonsTotal)}
+            </span>
           </div>
         )}
 
         <div className="flex justify-between items-baseline gap-4 pt-3 border-t border-goldSand-200">
           <span className="font-medium text-codGray-950">Biaya</span>
-          <span className="font-ibarra text-2xl font-semibold text-goldSand-800">Free</span>
+          <span className="font-ibarra text-2xl font-semibold text-goldSand-800 tabular-nums">
+            {formatRupiah(pricing.totalPrice)}
+          </span>
         </div>
       </div>
 

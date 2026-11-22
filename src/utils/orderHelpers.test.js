@@ -6,6 +6,7 @@ import {
   generateSlug,
   sanitizeInstagram,
   normalizeWhatsapp,
+  extractYoutubeId,
   formatRupiah,
   formatDateIndo,
   calculateOrderPricing,
@@ -45,7 +46,7 @@ test('formatRupiah and formatDateIndo format display values cleanly', () => {
   assert.equal(formatDateIndo('invalid'), '');
 });
 
-test('calculateOrderPricing returns zero (Free) for all packages and add-ons', () => {
+test('calculateOrderPricing supports both Free (0) and dynamic paid (>0) catalog prices', () => {
   const baseOnly = calculateOrderPricing('premium', { splitLink: false });
   assert.deepEqual(baseOnly, {
     currency: 'IDR',
@@ -54,12 +55,16 @@ test('calculateOrderPricing returns zero (Free) for all packages and add-ons', (
     totalPrice: 0,
   });
 
-  const withSplit = calculateOrderPricing('standard', { splitLink: true });
-  assert.deepEqual(withSplit, {
+  const paidCatalog = {
+    packages: [{ id: 'premium', price: 299000 }],
+    addons: { splitLink: { price: 49000 } },
+  };
+  const paidWithSplit = calculateOrderPricing('premium', { splitLink: true }, paidCatalog);
+  assert.deepEqual(paidWithSplit, {
     currency: 'IDR',
-    basePrice: 0,
-    addonsTotal: 0,
-    totalPrice: 0,
+    basePrice: 299000,
+    addonsTotal: 49000,
+    totalPrice: 348000,
   });
 });
 
@@ -71,7 +76,9 @@ test('validateStep enforces required and conditional fields across steps 1-6', (
   form.allowSocialMedia = true;
   assert.deepEqual(validateStep(1, form), {});
 
-  // Step 2 requires themeId
+  // Step 2 auto-selects editorial-classic, and rejects empty/invalid themeId
+  assert.deepEqual(validateStep(2, form), {});
+  form.themeId = '';
   assert.ok(validateStep(2, form).themeId);
   form.themeId = 'editorial-classic';
   assert.deepEqual(validateStep(2, form), {});
@@ -162,4 +169,26 @@ test('buildOrderPayload strips inactive conditional arrays and normalizes fields
   assert.doesNotMatch(decoded, /Rp\d/);
   assert.match(decoded, /Split Link/);
   assert.match(decoded, /https:\/\/anselmoments\.com\/order\/ANSL-7K9M2X/);
+
+  const paidCatalog = {
+    packages: [{ id: 'premium', name: 'Premium', price: 299000 }],
+    addons: { splitLink: { price: 49000 } },
+  };
+  const paidPayload = buildOrderPayload(form, 'ANSL-9P2Q3R', paidCatalog);
+  assert.equal(paidPayload.status, 'pending_payment');
+  assert.equal(paidPayload.pricing.totalPrice, 348000);
+  const paidWa = decodeURIComponent(
+    buildAdminWhatsappUrl(paidPayload, 'https://anselmoments.com').split('text=')[1]
+  );
+  assert.match(paidWa, /Biaya: \*Rp348\.000\*/);
+});
+
+test('extractYoutubeId parses standard, short, music, shorts, and embed YouTube URLs only', () => {
+  assert.equal(extractYoutubeId('https://youtu.be/PEM0Vs8jf1w?si=kT8qhfO000lCtn6r'), 'PEM0Vs8jf1w');
+  assert.equal(extractYoutubeId('https://www.youtube.com/watch?v=SokqIN0Fj0c'), 'SokqIN0Fj0c');
+  assert.equal(extractYoutubeId('https://music.youtube.com/watch?v=PEM0Vs8jf1w&feature=share'), 'PEM0Vs8jf1w');
+  assert.equal(extractYoutubeId('https://www.youtube.com/shorts/PEM0Vs8jf1w'), 'PEM0Vs8jf1w');
+  assert.equal(extractYoutubeId('https://www.youtube.com/embed/PEM0Vs8jf1w'), 'PEM0Vs8jf1w');
+  assert.equal(extractYoutubeId('/assets/music/backsound-fix.mp3'), '');
+  assert.equal(extractYoutubeId('https://example.com/song.mp3?v=1234567890'), '');
 });

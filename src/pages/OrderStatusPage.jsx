@@ -17,8 +17,9 @@ import {
 import {
   buildAdminWhatsappUrl,
   formatDateIndo,
+  formatRupiah,
 } from '../utils/orderHelpers';
-import { getOrderByCode, normalizeOrderCode } from '../services/orderService';
+import { getOrderByCode, normalizeOrderCode } from '../services/api';
 import { OrderShell } from '../components/order/OrderShell';
 
 export default function OrderStatusPage() {
@@ -188,6 +189,13 @@ export default function OrderStatusPage() {
   const activeStepIndex = ORDER_STATUS_STEPS.findIndex((s) => s.key === effectiveStatusKey);
   const statusPageUrl = `${window.location.origin}/order/${order.orderCode}`;
   const waUrl = buildAdminWhatsappUrl(order, window.location.origin);
+  const totalPrice = Number(order.pricing?.totalPrice) || 0;
+  const formattedTotal = formatRupiah(totalPrice);
+  const displayWhatsapp = order.contact?.whatsapp
+    ? String(order.contact.whatsapp).startsWith('+')
+      ? order.contact.whatsapp
+      : `+${order.contact.whatsapp}`
+    : '-';
 
   const coupleTitle = [
     order.invitationData?.groom?.nickname,
@@ -256,12 +264,14 @@ export default function OrderStatusPage() {
             <div className="flex flex-wrap items-baseline justify-between gap-4">
               <div>
                 <p className="text-xs text-codGray-500">Biaya Pemesanan</p>
-                <p className="font-ibarra text-3xl font-semibold text-goldSand-800 mt-0.5">
-                  Free
+                <p className="font-ibarra text-3xl font-semibold text-goldSand-800 mt-0.5 tabular-nums">
+                  {formattedTotal}
                 </p>
               </div>
               <p className="text-xs text-codGray-500 max-w-xs">
-                Konfirmasi pesanan dan pengiriman foto tambahan (jika ada) dapat dilanjutkan langsung melalui WhatsApp Admin.
+                {totalPrice > 0
+                  ? 'Konfirmasi pesanan, pembayaran, dan pengiriman foto tambahan dapat dilanjutkan langsung melalui WhatsApp Admin.'
+                  : 'Konfirmasi pesanan dan pengiriman foto tambahan (jika ada) dapat dilanjutkan langsung melalui WhatsApp Admin.'}
               </p>
             </div>
 
@@ -272,8 +282,27 @@ export default function OrderStatusPage() {
               className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-goldSand-300 hover:bg-goldSand-400 px-6 py-3.5 text-sm sm:text-base font-medium text-codGray-950 transition-colors"
             >
               <MessageCircle size={18} />
-              <span>Konfirmasi Pesanan via WhatsApp</span>
+              <span>
+                {totalPrice > 0
+                  ? 'Konfirmasi & Bayar via WhatsApp'
+                  : 'Konfirmasi Pesanan via WhatsApp'}
+              </span>
             </a>
+
+            {Array.isArray(order.publishedSlugs) && order.publishedSlugs.length > 0 && (
+              <div className="pt-3 border-t border-goldSand-200 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-codGray-500">Undangan Aktif:</span>
+                {order.publishedSlugs.map((item) => (
+                  <Link
+                    key={item.slug}
+                    to={`/${item.slug}`}
+                    className="inline-flex items-center rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-goldSand-800 border border-goldSand-200 hover:bg-goldSand-50"
+                  >
+                    /{item.slug}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -321,10 +350,14 @@ export default function OrderStatusPage() {
                           isCurrent || isDone ? 'text-codGray-950' : 'text-codGray-500'
                         }`}
                       >
-                        {st.label}
+                        {st.key === 'pending_confirmation' && totalPrice > 0
+                          ? 'Menunggu Pembayaran'
+                          : st.label}
                       </p>
                       <p className="text-xs text-codGray-500 mt-0.5 leading-relaxed">
-                        {st.description}
+                        {st.key === 'pending_confirmation' && totalPrice > 0
+                          ? 'Lakukan konfirmasi & pembayaran melalui WhatsApp Admin agar tim kami segera memproses undangan Anda.'
+                          : st.description}
                       </p>
                     </div>
                   </li>
@@ -389,9 +422,9 @@ export default function OrderStatusPage() {
 
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-codGray-500">Paket &amp; Add-On</dt>
-              <dd className="font-medium text-codGray-950 sm:text-right">
+              <dd className="font-medium text-codGray-950 sm:text-right tabular-nums">
                 Paket {order.packageName}
-                {order.addons?.splitLink ? ` + ${ORDER_ADDONS.splitLink.name}` : ''} · Free
+                {order.addons?.splitLink ? ` + ${ORDER_ADDONS.splitLink.name}` : ''} · {formattedTotal}
               </dd>
             </div>
 
@@ -405,7 +438,7 @@ export default function OrderStatusPage() {
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
               <dt className="text-codGray-500">Kontak WhatsApp</dt>
               <dd className="font-medium text-codGray-950 sm:text-right tabular-nums">
-                +{order.contact?.whatsapp}
+                {displayWhatsapp}
               </dd>
             </div>
           </dl>

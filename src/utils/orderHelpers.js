@@ -90,6 +90,35 @@ export function isValidOptionalHttpUrl(raw) {
   }
 }
 
+const YOUTUBE_HOST_REGEX = /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/i;
+const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{6,20}$/;
+
+export function extractYoutubeId(rawUrl) {
+  const raw = String(rawUrl || '').trim();
+  if (!raw) return '';
+  try {
+    const parsed = new URL(raw);
+    if (!YOUTUBE_HOST_REGEX.test(parsed.hostname)) return '';
+
+    let candidate = '';
+    if (/(^|\.)youtu\.be$/i.test(parsed.hostname)) {
+      candidate = parsed.pathname.replace(/^\//, '').split('/')[0] || '';
+    } else if (parsed.searchParams.get('v')) {
+      candidate = parsed.searchParams.get('v') || '';
+    } else {
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const idx = parts.findIndex((p) => p === 'embed' || p === 'shorts' || p === 'live');
+      if (idx >= 0 && parts[idx + 1]) {
+        candidate = parts[idx + 1];
+      }
+    }
+
+    return YOUTUBE_ID_REGEX.test(candidate) ? candidate : '';
+  } catch {
+    return '';
+  }
+}
+
 export function formatRupiah(amount) {
   const num = Number(amount) || 0;
   if (num <= 0) return 'Free';
@@ -114,10 +143,14 @@ export function formatDateIndo(dateTimeLocal) {
   return `${INDONESIAN_DAYS[date.getDay()]}, ${day} ${INDONESIAN_MONTHS[month - 1]} ${year}`;
 }
 
-export function calculateOrderPricing(packageId, addons = {}) {
-  const pkg = ORDER_PACKAGES.find((item) => item.id === packageId) || ORDER_PACKAGES[0];
-  const basePrice = pkg ? pkg.price : 0;
-  const addonsTotal = addons?.splitLink ? ORDER_ADDONS.splitLink.price : 0;
+export function calculateOrderPricing(packageId, addons = {}, catalog = {}) {
+  const packages = Array.isArray(catalog.packages) && catalog.packages.length > 0
+    ? catalog.packages
+    : ORDER_PACKAGES;
+  const splitLinkAddon = catalog.addons?.splitLink || ORDER_ADDONS.splitLink;
+  const pkg = packages.find((item) => item.id === packageId) || packages[0];
+  const basePrice = Math.max(0, Number(pkg?.price) || 0);
+  const addonsTotal = addons?.splitLink ? Math.max(0, Number(splitLinkAddon?.price) || 0) : 0;
 
   return {
     currency: 'IDR',
@@ -127,8 +160,14 @@ export function calculateOrderPricing(packageId, addons = {}) {
   };
 }
 
-export function validateStep(step, form) {
+export function validateStep(step, form, catalog = {}) {
   const errors = {};
+  const themes = Array.isArray(catalog.themes) && catalog.themes.length > 0
+    ? catalog.themes
+    : ORDER_THEMES;
+  const packages = Array.isArray(catalog.packages) && catalog.packages.length > 0
+    ? catalog.packages
+    : ORDER_PACKAGES;
 
   if (step === 1) {
     if (!form.eventType) {
@@ -140,7 +179,7 @@ export function validateStep(step, form) {
   }
 
   if (step === 2) {
-    if (!form.themeId || !ORDER_THEMES.some((t) => t.id === form.themeId)) {
+    if (!form.themeId || !themes.some((t) => t.id === form.themeId)) {
       errors.themeId = 'Pilih salah satu tema undangan untuk melanjutkan.';
     }
   }
@@ -193,7 +232,7 @@ export function validateStep(step, form) {
   }
 
   if (step === 5) {
-    if (!form.packageId || !ORDER_PACKAGES.some((p) => p.id === form.packageId)) {
+    if (!form.packageId || !packages.some((p) => p.id === form.packageId)) {
       errors.packageId = 'Pilih paket undangan terlebih dahulu.';
     }
     if (form.features?.loveStoryEnabled) {
@@ -252,25 +291,27 @@ export function validateStep(step, form) {
   return errors;
 }
 
-export function buildOrderPayload(form, orderCode) {
-  const theme = ORDER_THEMES.find((t) => t.id === form.themeId);
-  const pkg = ORDER_PACKAGES.find((p) => p.id === form.packageId) || ORDER_PACKAGES[0];
-  const pricing = calculateOrderPricing(pkg.id, form.addons);
+export function buildOrderPayload(form, orderCode, catalog = {}) {
+  const themes = Array.isArray(catalog.themes) && catalog.themes.length > 0
+    ? catalog.themes
+    : ORDER_THEMES;
+  const packages = Array.isArray(catalog.packages) && catalog.packages.length > 0
+    ? catalog.packages
+    : ORDER_PACKAGES;
+  const theme = themes.find((t) => t.id === form.themeId);
+  const pkg = packages.find((p) => p.id === form.packageId) || packages[0];
+  const pricing = calculateOrderPricing(pkg.id, form.addons, catalog);
   const cleanSlug =
     slugifyText(form.requestedSlug) ||
     generateSlug(form.groom?.nickname, form.bride?.nickname) ||
     orderCode.toLowerCase();
-
-  const coupleTitle = [form.groom?.nickname?.trim(), form.bride?.nickname?.trim()]
-    .filter(Boolean)
-    .join(' & ');
 
   const normalizedWa = normalizeWhatsapp(form.contact?.whatsapp) || '';
 
   return {
     orderCode,
     schemaVersion: 1,
-    status: 'pending_confirmation',
+    status: pricing.totalPrice > 0 ? 'pending_payment' : 'pending_confirmation',
     eventType: form.eventType || 'pernikahan',
     hasMepandes: Boolean(form.hasMepandes),
     allowSocialMedia: Boolean(form.allowSocialMedia),
@@ -364,6 +405,12 @@ export function buildAdminWhatsappUrl(order, origin) {
     .filter(Boolean)
     .join(' & ');
 
+  const pricing = order?.pricing || { basePrice: 0, addonsTotal: 0, totalPrice: 0 };
+  const totalPrice = Number(pricing.totalPrice) || 0;
+  const pkgLabel = formatRupiah(pricing.basePrice);
+  const addonLabel = formatRupiah(pricing.addonsTotal);
+  const totalLabel = formatRupiah(totalPrice);
+
   const lines = [
     `Halo Admin ${BRAND_CONFIG.name}, saya sudah mengisi formulir pemesanan undangan digital.`,
     '',
@@ -372,24 +419,26 @@ export function buildAdminWhatsappUrl(order, origin) {
     `• Nama Pemesan: ${order?.contact?.customerName || '-'}`,
     `• Mempelai: ${coupleTitle || '-'}`,
     `• Tema: ${order.themeName || '-'}`,
-    `• Paket: ${order.packageName} (Free)`,
+    `• Paket: ${order.packageName} (${pkgLabel})`,
   ];
 
   if (order?.addons?.splitLink) {
-    lines.push(`• Add-On: ${ORDER_ADDONS.splitLink.name} (Free)`);
+    lines.push(`• Add-On: ${ORDER_ADDONS.splitLink.name} (${addonLabel})`);
   }
   if (order?.hasMepandes) {
     lines.push('• Tambahan Acara: Metatah / Mepandes');
   }
 
   lines.push(
-    '• Biaya: *Free*',
+    `• Biaya: *${totalLabel}*`,
     `• Request Link: ${BRAND_CONFIG.domain}/${order.requestedSlug}`,
     '',
     'Link status pesanan:',
     `${baseOrigin}/order/${order.orderCode}`,
     '',
-    'Mohon konfirmasi untuk melanjutkan proses pengerjaan undangan ya. Terima kasih!'
+    totalPrice > 0
+      ? 'Mohon informasi konfirmasi & pembayaran untuk melanjutkan proses pengerjaan undangan ya. Terima kasih!'
+      : 'Mohon konfirmasi untuk melanjutkan proses pengerjaan undangan ya. Terima kasih!'
   );
 
   return `https://wa.me/${BRAND_CONFIG.adminWhatsapp}?text=${encodeURIComponent(lines.join('\n'))}`;

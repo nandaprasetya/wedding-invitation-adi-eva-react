@@ -3,14 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
 import {
   BRAND_CONFIG,
+  ORDER_ADDONS,
+  ORDER_PACKAGES,
   ORDER_STEPS,
+  ORDER_THEMES,
   createInitialOrderState,
 } from '../config/orderCatalog';
 import {
+  calculateOrderPricing,
+  formatRupiah,
   generateSlug,
   validateStep,
 } from '../utils/orderHelpers';
-import { createOrder } from '../services/orderService';
+import { createOrder, getCatalog } from '../services/api';
 import {
   OrderShell,
   OrderSummaryCard,
@@ -75,9 +80,58 @@ export default function OrderPage() {
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [catalog, setCatalog] = useState(() => ({
+    templates: ORDER_THEMES,
+    packages: ORDER_PACKAGES,
+    addons: ORDER_ADDONS,
+  }));
 
   useEffect(() => {
     document.title = `Pesan Undangan Digital — ${BRAND_CONFIG.name}`;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    getCatalog()
+      .then((data) => {
+        if (!active || !data) return;
+        const nextTemplates = data.templates?.length ? data.templates : ORDER_THEMES;
+        const nextPackages = data.packages?.length ? data.packages : ORDER_PACKAGES;
+        const nextAddons = data.addons || { splitLink: null };
+        setCatalog({
+          templates: nextTemplates,
+          packages: nextPackages,
+          addons: nextAddons,
+        });
+        setForm((prev) => {
+          const validTheme = nextTemplates.some((t) => t.id === prev.themeId)
+            ? prev.themeId
+            : nextTemplates[0]?.id || 'editorial-classic';
+          const validPkg = nextPackages.some((p) => p.id === prev.packageId)
+            ? prev.packageId
+            : nextPackages[0]?.id || 'premium';
+          const nextSplitLink = nextAddons?.splitLink ? prev.addons.splitLink : false;
+          if (
+            validTheme === prev.themeId &&
+            validPkg === prev.packageId &&
+            nextSplitLink === prev.addons.splitLink
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            themeId: validTheme,
+            packageId: validPkg,
+            addons: { ...prev.addons, splitLink: nextSplitLink },
+          };
+        });
+      })
+      .catch(() => {
+        // Fallback silently to static catalog defaults
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Auto-generate requestedSlug from couple nicknames unless user manually edited it
@@ -136,7 +190,10 @@ export default function OrderPage() {
   };
 
   const handleNext = () => {
-    const stepErrors = validateStep(step, form);
+    const stepErrors = validateStep(step, form, {
+      themes: catalog.templates,
+      packages: catalog.packages,
+    });
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
       scrollToTop();
@@ -164,7 +221,10 @@ export default function OrderPage() {
 
   const handleSubmitOrder = async () => {
     for (let s = 1; s <= ORDER_STEPS.length; s += 1) {
-      const stepErr = validateStep(s, form);
+      const stepErr = validateStep(s, form, {
+        themes: catalog.templates,
+        packages: catalog.packages,
+      });
       if (Object.keys(stepErr).length > 0) {
         setStep(s);
         setErrors(stepErr);
@@ -195,6 +255,13 @@ export default function OrderPage() {
   };
 
   const isLastStep = step === ORDER_STEPS.length;
+  const pricing = calculateOrderPricing(form.packageId, form.addons, {
+    packages: catalog.packages,
+    addons: catalog.addons,
+  });
+  const allPackagesFree =
+    catalog.packages.every((p) => Number(p.price) === 0) &&
+    Number(catalog.addons?.splitLink?.price || 0) === 0;
 
   return (
     <OrderShell>
@@ -205,7 +272,9 @@ export default function OrderPage() {
             Pesan <span className="italic text-goldSand-800">Undangan Digital</span> Anda
           </h1>
           <p className="text-base text-codGray-900 mt-3 leading-relaxed">
-            Lengkapi detail acara dalam enam langkah singkat. Semua paket saat ini gratis dan konfirmasi dilanjutkan melalui WhatsApp.
+            {allPackagesFree
+              ? 'Lengkapi detail acara dalam enam langkah singkat. Semua paket saat ini gratis dan konfirmasi dilanjutkan melalui WhatsApp.'
+              : 'Lengkapi detail acara dalam enam langkah singkat. Konfirmasi pesanan dan pembayaran dilanjutkan melalui WhatsApp Admin.'}
           </p>
         </div>
 
@@ -270,7 +339,12 @@ export default function OrderPage() {
                   <Step1Preferences form={form} errors={errors} onChange={handleFormChange} />
                 )}
                 {step === 2 && (
-                  <Step2Theme form={form} errors={errors} onChange={handleFormChange} />
+                  <Step2Theme
+                    form={form}
+                    errors={errors}
+                    onChange={handleFormChange}
+                    catalog={catalog}
+                  />
                 )}
                 {step === 3 && (
                   <Step3Couple form={form} errors={errors} onChange={handleFormChange} />
@@ -279,7 +353,12 @@ export default function OrderPage() {
                   <Step4Events form={form} errors={errors} onChange={handleFormChange} />
                 )}
                 {step === 5 && (
-                  <Step5FeaturesMedia form={form} errors={errors} onChange={handleFormChange} />
+                  <Step5FeaturesMedia
+                    form={form}
+                    errors={errors}
+                    onChange={handleFormChange}
+                    catalog={catalog}
+                  />
                 )}
                 {step === 6 && (
                   <Step6ReviewContact
@@ -287,6 +366,7 @@ export default function OrderPage() {
                     errors={errors}
                     onChange={handleFormChange}
                     onJumpStep={handleJumpStep}
+                    catalog={catalog}
                   />
                 )}
 
@@ -332,7 +412,7 @@ export default function OrderPage() {
 
           {/* Sticky Live Summary (Desktop) */}
           <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-24">
-            <OrderSummaryCard form={form} lastSavedAt={lastSavedAt} />
+            <OrderSummaryCard form={form} lastSavedAt={lastSavedAt} catalog={catalog} />
           </div>
         </div>
       </div>
@@ -342,8 +422,8 @@ export default function OrderPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div>
             <p className="text-xs text-codGray-500">Biaya</p>
-            <p className="font-ibarra text-xl font-semibold text-goldSand-800 leading-tight">
-              Free
+            <p className="font-ibarra text-xl font-semibold text-goldSand-800 leading-tight tabular-nums">
+              {formatRupiah(pricing.totalPrice)}
             </p>
           </div>
 

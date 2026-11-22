@@ -1,37 +1,65 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Copy, Send, UserPlus, Check } from 'lucide-react';
+import { getInvitation } from '../services/api';
 import '../styles/custom-name.css';
 
-export default function CustomName() {
-  const [name, setName] = useState('');
-  const [submittedName, setSubmittedName] = useState('');
-  const [showDetail, setShowDetail] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const getInvitationUrl = (recipientName) => {
-    const encodedName = encodeURIComponent(recipientName).replace(/%20/g, '+');
-    const origin = window.location.origin;
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return `${origin}/adi-eva/?to=${encodedName}`;
-    }
-    return `https://anselmoments.com/adi-eva/?to=${encodedName}`;
-  };
-
-  const generateInvitationText = (recipientName) => {
-    const link = getInvitationUrl(recipientName);
-    return `               Kepada Yth.
-*${recipientName}*
+const DEFAULT_SHARE_TEMPLATE = `               Kepada Yth.
+*{{guestName}}*
 
 *OM SWASTYASTU*,
 Atas asung kerta wara nugraha Ida Sang Hyang Widhi Wasa, tanpa mengurangi rasa hormat, karena keterbatasan jarak dan waktu, kami bermaksud mengundang Bapak/Ibu/Saudara/i dalam Upacara Manusa Yadnya Pawiwahan (Pernikahan).
 
 Undangan dapat dilihat dengan mengklik link dibawah ini :
-${link}
+{{link}}
 
 Suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i dan teman-teman dapat hadir pada acara kami dan memberikan doa restu.🙏
 
 Terima kasih.
 OM SHANTI, SHANTI, SHANTI OM`;
+
+export default function CustomName() {
+  const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetSlug = (slug || 'adi-eva').toLowerCase();
+  const previewToken = searchParams.get('preview')?.trim() || '';
+
+  const [name, setName] = useState('');
+  const [submittedName, setSubmittedName] = useState('');
+  const [showDetail, setShowDetail] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [invitationTitle, setInvitationTitle] = useState('');
+  const [shareTemplate, setShareTemplate] = useState(DEFAULT_SHARE_TEMPLATE);
+
+  useEffect(() => {
+    document.title = 'Bagikan Undangan — Ansel Moments';
+    let active = true;
+    getInvitation(targetSlug, previewToken)
+      .then((data) => {
+        if (!active || !data?.invitation) return;
+        setInvitationTitle(data.invitation.title || '');
+        if (data.invitation.share_template?.trim()) {
+          setShareTemplate(data.invitation.share_template);
+        }
+      })
+      .catch(() => {
+        // Keep default share template if invitation is draft or offline
+      });
+    return () => {
+      active = false;
+    };
+  }, [targetSlug, previewToken]);
+
+  const getInvitationUrl = (recipientName) => {
+    const encodedName = encodeURIComponent(recipientName).replace(/%20/g, '+');
+    return `${window.location.origin}/${targetSlug}/?to=${encodedName}`;
+  };
+
+  const generateInvitationText = (recipientName) => {
+    const link = getInvitationUrl(recipientName);
+    return shareTemplate
+      .replace(/\{\{guestName\}\}/g, recipientName)
+      .replace(/\{\{link\}\}/g, link);
   };
 
   const handleLanjutkan = (e) => {
@@ -65,7 +93,9 @@ OM SHANTI, SHANTI, SHANTI OM`;
     <div className="custom-name-container">
       {/* Form Section */}
       <div className="custom-name-card">
-        <div className="custom-name-card-header">Bagikan Undangan</div>
+        <div className="custom-name-card-header">
+          Bagikan Undangan{invitationTitle ? ` — ${invitationTitle}` : ''}
+        </div>
         <div className="custom-name-card-body">
           <form onSubmit={handleLanjutkan}>
             <div className="input-group">

@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "wedding-invitation-prodaction",
+  "main": "./worker/index.js",
+  "compatibility_date": "2025-04-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/*", "!/assets/*", "!/favicon.ico", "!/logo-ansel.png"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ansel_db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "ansel-media"
+    }
+  ],
+  "vars": {
+    "R2_PUBLIC_BASE_URL": "https://media.anselmoments.com"
+  }
+}
