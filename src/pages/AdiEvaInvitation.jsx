@@ -255,7 +255,7 @@ export default function AdiEvaInvitation() {
   const paginatedWishes = wishes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <>
+    <div className="invitation-root">
       {/* Opening Cover Screen Overlay */}
       {!isOpeningHidden && (
         <div
@@ -764,6 +764,6 @@ export default function AdiEvaInvitation() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
