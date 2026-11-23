@@ -14,6 +14,7 @@ import {
   Save,
   Smartphone,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   getAdminInvitation,
@@ -173,10 +174,25 @@ export default function InvitationEditor({
     if (expandedId === sectionId) setExpandedId('');
   };
 
+  useEffect(() => {
+    if (!activeSlot) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setActiveSlot(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeSlot]);
+
   const handleSelectAssetForSlot = (asset) => {
     if (!activeSlot) return;
     if (activeSlot.target === 'og_image_url') {
       setInvitation((prev) => ({ ...prev, og_image_url: asset.public_url }));
+      setActiveSlot(null);
       return;
     }
 
@@ -196,6 +212,10 @@ export default function InvitationEditor({
         data: setNestedValue(sec.data || {}, activeSlot.path, asset.public_url),
       };
     });
+
+    if (!activeSlot.multiple) {
+      setActiveSlot(null);
+    }
   };
 
   const getSelectedUrlsForActiveSlot = () => {
@@ -255,8 +275,6 @@ export default function InvitationEditor({
       updateSection(section.id, (sec) => ({ ...sec, data: { ...(sec.data || {}), ...patch } }));
 
     const renderSlotPickerButton = (path, label, multiple = false) => {
-      const isPicking =
-        activeSlot?.sectionId === section.id && activeSlot?.path === path;
       const currentVal = getNestedValue(data, path);
 
       return (
@@ -266,17 +284,11 @@ export default function InvitationEditor({
             <button
               type="button"
               onClick={() =>
-                setActiveSlot(
-                  isPicking ? null : { sectionId: section.id, path, multiple, label }
-                )
+                setActiveSlot({ sectionId: section.id, path, multiple, label })
               }
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium cursor-pointer ${
-                isPicking
-                  ? 'bg-goldSand-800 text-white'
-                  : 'bg-white border border-codGray-200 text-codGray-900 hover:bg-goldSand-100'
-              }`}
+              className="rounded-lg bg-white border border-codGray-200 px-2.5 py-1 text-xs font-medium text-codGray-900 hover:bg-goldSand-100 cursor-pointer"
             >
-              {isPicking ? 'Selesai Pilih' : 'Pilih dari Media Pool'}
+              Pilih dari Media Pool
             </button>
           </div>
 
@@ -669,7 +681,7 @@ export default function InvitationEditor({
                   />
                   <input
                     type="text"
-                    placeholder="Hari & Tanggal (mis. Rabu, 19 Agustus 2026)"
+                    placeholder="Hari & Tanggal (mis. Sabtu, 12 Desember 2026)"
                     value={ev.dateLabel || ''}
                     onChange={(e) =>
                       updateData({
@@ -682,7 +694,7 @@ export default function InvitationEditor({
                   />
                   <input
                     type="text"
-                    placeholder="Waktu (mis. Pukul 15.00 WITA – Selesai)"
+                    placeholder="Waktu (mis. Pukul 11.00 WITA – Selesai)"
                     value={ev.timeLabel || ''}
                     onChange={(e) =>
                       updateData({
@@ -1210,7 +1222,7 @@ export default function InvitationEditor({
                       onChange={(e) =>
                         setInvitation((prev) => ({ ...prev, event_datetime: e.target.value }))
                       }
-                      placeholder="2026-08-19T15:00:00+08:00"
+                      placeholder="2026-12-12T11:00:00+08:00"
                       className={INPUT_CLASS}
                     />
                   </div>
@@ -1252,7 +1264,7 @@ export default function InvitationEditor({
                       onChange={(e) =>
                         setInvitation((prev) => ({ ...prev, expires_at: e.target.value }))
                       }
-                      placeholder="2027-08-19T00:00:00Z"
+                      placeholder="2027-12-12T00:00:00Z"
                       className={INPUT_CLASS}
                     />
                   </div>
@@ -1444,14 +1456,75 @@ export default function InvitationEditor({
               invitationId={invitation.id}
               assets={assets}
               onAssetsChange={setAssets}
-              activeSlotLabel={activeSlot?.label || ''}
-              selectedUrls={getSelectedUrlsForActiveSlot()}
-              onSelectAsset={handleSelectAssetForSlot}
               musicUrl={invitation.music_url}
               musicPresetId={invitation.music_preset_id}
               musicPresets={musicPresets}
               onMusicChange={(patch) => setInvitation((prev) => ({ ...prev, ...patch }))}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Media Pool Picker Modal */}
+      {activeSlot && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Pilih Foto — ${activeSlot.label}`}
+          onClick={() => setActiveSlot(null)}
+          className="fixed inset-0 z-50 bg-codGray-950/55 flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-3xl max-h-[85vh] rounded-2xl bg-white border border-codGray-100 flex flex-col overflow-hidden"
+          >
+            <div className="px-5 py-4 border-b border-codGray-100 bg-goldSand-50 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-ibarra text-2xl font-semibold text-codGray-950 leading-tight">
+                  Pilih Foto — {activeSlot.label}
+                </h3>
+                <p className="text-xs text-codGray-500 mt-0.5">
+                  {activeSlot.multiple
+                    ? 'Klik beberapa foto untuk memilih atau membatalkan pilihan, lalu tekan Selesai.'
+                    : 'Klik satu foto untuk langsung dipasang ke slot ini.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSlot(null)}
+                aria-label="Tutup pop-up media pool"
+                className="p-1.5 rounded-xl text-codGray-600 hover:bg-goldSand-100 hover:text-codGray-950 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5">
+              <MediaPool
+                pickerOnly
+                slug={invitation.slug}
+                orderId={invitation.order_id}
+                invitationId={invitation.id}
+                assets={assets}
+                onAssetsChange={setAssets}
+                activeSlotLabel={activeSlot.label}
+                selectedUrls={getSelectedUrlsForActiveSlot()}
+                onSelectAsset={handleSelectAssetForSlot}
+              />
+            </div>
+
+            <div className="px-5 py-3.5 border-t border-codGray-100 bg-goldSand-50/70 flex items-center justify-between gap-3">
+              <span className="text-xs text-codGray-600 tabular-nums">
+                {getSelectedUrlsForActiveSlot().length} foto terpilih
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveSlot(null)}
+                className="rounded-xl bg-codGray-950 hover:bg-codGray-900 px-4 py-2 text-xs font-medium text-white cursor-pointer"
+              >
+                Selesai
+              </button>
+            </div>
           </div>
         </div>
       )}

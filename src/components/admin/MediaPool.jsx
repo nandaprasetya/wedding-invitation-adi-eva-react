@@ -17,6 +17,7 @@ export default function MediaPool({
   musicPresetId = '',
   musicPresets = [],
   onMusicChange,
+  pickerOnly = false,
 }) {
   const photoInputRef = useRef(null);
   const audioInputRef = useRef(null);
@@ -113,11 +114,15 @@ export default function MediaPool({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="font-ibarra text-xl font-semibold text-codGray-950">Media Pool Foto</h3>
+            {!pickerOnly && (
+              <h3 className="font-ibarra text-xl font-semibold text-codGray-950">Media Pool Foto</h3>
+            )}
             <p className="text-xs text-codGray-500">
-              {activeSlotLabel
-                ? `Sedang memilih foto untuk: ${activeSlotLabel}`
-                : 'Upload foto sekali (format asli JPG/PNG kompatibel iPhone & Safari, resize max 1600px), lalu pilih untuk ditempatkan ke slot.'}
+              {pickerOnly
+                ? `${imageAssets.length} foto tersedia di Media Pool. Klik foto untuk memilih atau unggah foto baru.`
+                : activeSlotLabel
+                  ? `Sedang memilih foto untuk: ${activeSlotLabel}`
+                  : 'Upload foto sekali (format asli JPG/PNG kompatibel iPhone & Safari, resize max 1600px), lalu pilih dari masing-masing section.'}
             </p>
           </div>
           <button
@@ -154,14 +159,15 @@ export default function MediaPool({
             handlePhotoFiles(e.dataTransfer.files);
           }}
           onClick={() => photoInputRef.current?.click()}
-          className={`rounded-2xl border border-dashed p-5 text-center cursor-pointer transition-colors ${
-            dragging
-              ? 'border-goldSand-800 bg-goldSand-50'
-              : 'border-codGray-200 bg-goldSand-50/40 hover:border-goldSand-800/60'
-          }`}
+          className={`rounded-2xl border border-dashed text-center cursor-pointer transition-colors ${
+            pickerOnly ? 'px-4 py-3' : 'p-5'
+          } ${dragging
+            ? 'border-goldSand-800 bg-goldSand-50'
+            : 'border-codGray-200 bg-goldSand-50/40 hover:border-goldSand-800/60'
+            }`}
         >
           <p className="text-xs text-codGray-700">
-            Tarik dan lepaskan beberapa foto ke sini, atau klik untuk memilih file (JPG/PNG/WebP).
+            Tarik dan lepaskan beberapa foto ke sini, atau klik untuk memilih file (JPG/PNG).
           </p>
         </div>
 
@@ -180,26 +186,33 @@ export default function MediaPool({
         {imageAssets.length === 0 ? (
           <p className="text-xs text-codGray-500 py-3">Belum ada foto di Media Pool undangan ini.</p>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          <div
+            className={
+              pickerOnly
+                ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5'
+                : 'grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-72 overflow-y-auto pr-1'
+            }
+          >
             {imageAssets.map((asset) => {
               const isSelected = selectedUrls.includes(asset.public_url);
               return (
                 <div
                   key={asset.id}
-                  className={`group relative aspect-square rounded-xl overflow-hidden border bg-codGray-50 ${
-                    isSelected
-                      ? 'border-goldSand-800 ring-2 ring-goldSand-800'
-                      : 'border-codGray-100'
-                  }`}
+                  className={`group relative aspect-square rounded-xl overflow-hidden border bg-codGray-50 ${isSelected
+                    ? 'border-goldSand-800 ring-2 ring-goldSand-800'
+                    : 'border-codGray-100'
+                    }`}
                 >
                   <button
                     type="button"
                     onClick={() => onSelectAsset?.(asset)}
-                    className="w-full h-full block cursor-pointer"
+                    className={`w-full h-full block ${onSelectAsset ? 'cursor-pointer' : 'cursor-default'}`}
                     title={
                       activeSlotLabel
                         ? `Pilih untuk ${activeSlotLabel}`
-                        : 'Klik untuk pilih foto'
+                        : onSelectAsset
+                          ? 'Klik untuk pilih foto'
+                          : asset.r2_key
                     }
                   >
                     <img
@@ -239,7 +252,8 @@ export default function MediaPool({
       </div>
 
       {/* Audio Preset & Custom MP3 */}
-      <div className="pt-4 border-t border-codGray-100 space-y-3">
+      {!pickerOnly && (
+        <div className="pt-4 border-t border-codGray-100 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Music size={15} className="text-goldSand-800" />
@@ -293,11 +307,10 @@ export default function MediaPool({
                 key={a.id}
                 type="button"
                 onClick={() => onMusicChange?.({ music_url: a.public_url, music_preset_id: null })}
-                className={`rounded-xl border px-3 py-1.5 text-xs cursor-pointer ${
-                  musicUrl === a.public_url
-                    ? 'border-goldSand-800 bg-goldSand-50 text-goldSand-800 font-medium'
-                    : 'border-codGray-100 bg-white text-codGray-700'
-                }`}
+                className={`rounded-xl border px-3 py-1.5 text-xs cursor-pointer ${musicUrl === a.public_url
+                  ? 'border-goldSand-800 bg-goldSand-50 text-goldSand-800 font-medium'
+                  : 'border-codGray-100 bg-white text-codGray-700'
+                  }`}
               >
                 MP3 ({formatBytes(a.size_bytes)})
               </button>
@@ -340,7 +353,8 @@ export default function MediaPool({
             )}
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

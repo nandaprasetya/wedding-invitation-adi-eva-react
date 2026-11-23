@@ -662,7 +662,7 @@ export default function AdminPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Budi & Sari"
+                    placeholder="Bagus & Ayu"
                     value={newInvForm.title}
                     onChange={(e) => setNewInvForm((p) => ({ ...p, title: e.target.value }))}
                     className={INPUT_CLASS}
@@ -673,7 +673,7 @@ export default function AdminPage() {
                   <input
                     type="text"
                     required
-                    placeholder="budi-sari"
+                    placeholder="bagus-ayu"
                     value={newInvForm.slug}
                     onChange={(e) =>
                       setNewInvForm((p) => ({

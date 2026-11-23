@@ -360,7 +360,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.groom.fullName}
               onChange={(e) => updatePerson('groom', 'fullName', e.target.value)}
-              placeholder="I Gede Adi Wijaya"
+              placeholder="I Putu Bagus Mahendra"
               className={INPUT_CLASS}
             />
           </Field>
@@ -376,7 +376,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.groom.nickname}
               onChange={(e) => updatePerson('groom', 'nickname', e.target.value)}
-              placeholder="Adi"
+              placeholder="Bagus"
               className={INPUT_CLASS}
             />
           </Field>
@@ -385,7 +385,7 @@ export function Step3Couple({ form, errors, onChange }) {
         <Field
           id="groom-parents"
           label="Deskripsi Nama Orang Tua Pria"
-          hint="Contoh: Putra pertama dari pasangan Bpk. I Nyoman Sukra & Ibu Ni Wayan Darsih"
+          hint="Contoh: Putra pertama dari pasangan Bpk. I Wayan Sudarma & Ibu Ni Made Sariani"
         >
           <textarea
             id="groom-parents"
@@ -404,7 +404,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.groom.address}
               onChange={(e) => updatePerson('groom', 'address', e.target.value)}
-              placeholder="Kerobokan, Badung"
+              placeholder="Br. Tebongkang, Ubud, Gianyar"
               className={INPUT_CLASS}
             />
           </Field>
@@ -415,7 +415,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.groom.instagram}
               onChange={(e) => updatePerson('groom', 'instagram', sanitizeInstagram(e.target.value))}
-              placeholder="adiwijaya"
+              placeholder="bagusmahendra"
               className={INPUT_CLASS}
             />
           </Field>
@@ -439,7 +439,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.bride.fullName}
               onChange={(e) => updatePerson('bride', 'fullName', e.target.value)}
-              placeholder="Putu Eva Cahyani"
+              placeholder="Ni Kadek Ayu Pratiwi"
               className={INPUT_CLASS}
             />
           </Field>
@@ -455,7 +455,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.bride.nickname}
               onChange={(e) => updatePerson('bride', 'nickname', e.target.value)}
-              placeholder="Eva"
+              placeholder="Ayu"
               className={INPUT_CLASS}
             />
           </Field>
@@ -464,14 +464,14 @@ export function Step3Couple({ form, errors, onChange }) {
         <Field
           id="bride-parents"
           label="Deskripsi Nama Orang Tua Wanita"
-          hint="Contoh: Putri pertama dari pasangan Bpk. I Nyoman Kertiyasa & Ibu Dewa Ayu Citrawati"
+          hint="Contoh: Putri kedua dari pasangan Bpk. I Ketut Wirawan & Ibu Ni Luh Suarningsih"
         >
           <textarea
             id="bride-parents"
             rows={2}
             value={form.bride.parentDescription}
             onChange={(e) => updatePerson('bride', 'parentDescription', e.target.value)}
-            placeholder="Putri pertama dari pasangan Bpk. ... & Ibu ..."
+            placeholder="Putri kedua dari pasangan Bpk. ... & Ibu ..."
             className={INPUT_CLASS}
           />
         </Field>
@@ -483,7 +483,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.bride.address}
               onChange={(e) => updatePerson('bride', 'address', e.target.value)}
-              placeholder="Sesetan, Denpasar Selatan"
+              placeholder="Br. Dauh Pala, Tabanan"
               className={INPUT_CLASS}
             />
           </Field>
@@ -494,7 +494,7 @@ export function Step3Couple({ form, errors, onChange }) {
               type="text"
               value={form.bride.instagram}
               onChange={(e) => updatePerson('bride', 'instagram', sanitizeInstagram(e.target.value))}
-              placeholder="evacahyani"
+              placeholder="ayupratiwi"
               className={INPUT_CLASS}
             />
           </Field>
@@ -557,7 +557,7 @@ export function Step3Couple({ form, errors, onChange }) {
                     type="text"
                     value={person.fullName}
                     onChange={(e) => updateMepandes(idx, 'fullName', e.target.value)}
-                    placeholder="Komang Dika"
+                    placeholder="I Komang Aditya Mahendra"
                     className={INPUT_CLASS}
                   />
                 </Field>
@@ -568,7 +568,7 @@ export function Step3Couple({ form, errors, onChange }) {
                     rows={2}
                     value={person.description}
                     onChange={(e) => updateMepandes(idx, 'description', e.target.value)}
-                    placeholder="Putra kedua dari pasangan..."
+                    placeholder="Putra kedua dari pasangan Bpk. I Wayan Sudarma & Ibu Ni Made Sariani"
                     className={INPUT_CLASS}
                   />
                 </Field>
@@ -581,7 +581,7 @@ export function Step3Couple({ form, errors, onChange }) {
                     onChange={(e) =>
                       updateMepandes(idx, 'instagram', sanitizeInstagram(e.target.value))
                     }
-                    placeholder="komangdika"
+                    placeholder="komangaditya"
                     className={INPUT_CLASS}
                   />
                 </Field>
@@ -715,7 +715,7 @@ export function Step4Events({ form, errors, onChange }) {
                   type="text"
                   value={ev.dateLabel}
                   onChange={(e) => updateEvent(idx, 'dateLabel', e.target.value)}
-                  placeholder="Rabu, 19 Agustus 2026"
+                  placeholder="Sabtu, 12 Desember 2026"
                   className={INPUT_CLASS}
                 />
               </Field>
@@ -731,7 +731,7 @@ export function Step4Events({ form, errors, onChange }) {
                   type="text"
                   value={ev.timeLabel}
                   onChange={(e) => updateEvent(idx, 'timeLabel', e.target.value)}
-                  placeholder="Pukul 15.00 WITA – Selesai"
+                  placeholder="Pukul 11.00 WITA – Selesai"
                   className={INPUT_CLASS}
                 />
               </Field>
@@ -748,7 +748,7 @@ export function Step4Events({ form, errors, onChange }) {
                 rows={2}
                 value={ev.address}
                 onChange={(e) => updateEvent(idx, 'address', e.target.value)}
-                placeholder="Jalan Raya Gadon, Gg Manggis No 4, Kerobokan"
+                placeholder="Br. Tebongkang, Jl. Raya Singakerta No. 18, Ubud, Gianyar"
                 className={INPUT_CLASS}
               />
             </Field>
@@ -1041,7 +1041,7 @@ export function Step5FeaturesMedia({ form, errors, onChange, catalog = {} }) {
                         type="text"
                         value={gift.accountHolder}
                         onChange={(e) => updateGift(idx, 'accountHolder', e.target.value)}
-                        placeholder="I Gede Adi Wijaya"
+                        placeholder="I Putu Bagus Mahendra"
                         className={INPUT_CLASS}
                       />
                     </Field>
@@ -1056,7 +1056,7 @@ export function Step5FeaturesMedia({ form, errors, onChange, catalog = {} }) {
                         type="text"
                         value={gift.accountNumber}
                         onChange={(e) => updateGift(idx, 'accountNumber', e.target.value)}
-                        placeholder="0700899045"
+                        placeholder="1234567890"
                         className={INPUT_CLASS}
                       />
                     </Field>
@@ -1211,7 +1211,7 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep, catalog
           id="requested-slug"
           label="Custom Link Undangan"
           required
-          hint="Hanya gunakan huruf kecil, angka, dan tanda hubung (-). Contoh: adi-eva"
+          hint="Hanya gunakan huruf kecil, angka, dan tanda hubung (-). Contoh: bagus-ayu"
           error={errors.requestedSlug}
         >
           <div className="flex rounded-xl border border-codGray-100 bg-white overflow-hidden focus-within:border-goldSand-800 focus-within:ring-2 focus-within:ring-goldSand-300/60">
@@ -1235,7 +1235,7 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep, catalog
                   requestedSlug: slugifyText(prev.requestedSlug),
                 }))
               }
-              placeholder="adi-eva"
+              placeholder="bagus-ayu"
               className="w-full px-3.5 py-3 text-sm sm:text-base text-codGray-950 focus:outline-none"
             />
           </div>
@@ -1259,7 +1259,7 @@ export function Step6ReviewContact({ form, errors, onChange, onJumpStep, catalog
                   contact: { ...prev.contact, customerName: e.target.value },
                 }))
               }
-              placeholder="Contoh: Adi Wijaya"
+              placeholder="Contoh: Bagus Mahendra"
               className={INPUT_CLASS}
             />
           </Field>

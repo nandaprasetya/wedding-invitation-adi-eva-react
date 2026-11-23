@@ -358,7 +358,7 @@ export default function ThemesManager({
               <input
                 type="text"
                 list="demo-slug-suggestions"
-                placeholder="/adi-eva"
+                placeholder="/bagus-ayu"
                 value={createForm.demoUrl}
                 onChange={(e) => setCreateForm((prev) => ({ ...prev, demoUrl: e.target.value }))}
                 className={INPUT_CLASS}
